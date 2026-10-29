@@ -67,6 +67,8 @@ aside .logo{color:#fff;padding:4px 6px}
 .me .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
 .me button{color:#cfdcff;padding:6px 9px;border-radius:8px}
 .me button:hover{background:#ffffff1a}
+#out{width:100%;padding:10px;border-radius:10px;border:1px solid #ffffff2a;color:#cfdcff;font-weight:600}
+#out:hover{background:#ffffff14;color:#fff}
 
 main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .top{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card)}
@@ -185,7 +187,8 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
     <input id="q" placeholder="Buscar en tus chats" aria-label="Buscar chats">
     <div id="list"></div>
     <div class="me"><div class="av" id="av">U</div><div class="nm" id="nm">Usuario</div>
-      <button id="openSet" title="Perfil y ajustes">⚙</button><button id="out" title="Cerrar sesión">⎋</button></div>
+      <button id="openSet" title="Perfil y ajustes">⚙</button></div>
+    <button id="out">Cerrar sesión</button>
   </aside>
   <main>
     <div class="top"><button id="menu" aria-label="Menú">☰</button><h3 id="title">Nuevo chat</h3></div>
@@ -358,6 +361,32 @@ $('#gLogin').onclick = () => {
 };
 $('#out').onclick = () => { if (Cloud.on) return Cloud.out(); localStorage.removeItem('nx_session'); user = null; show('welcome') };
 
+/* ---------- Sugerencias aleatorias ----------
+   Se generan combinando plantillas y temas (miles de combinaciones) y cambian en cada chat nuevo.
+   Cuando conectemos la IA (Fase 3), también podrá inventarlas ella. */
+const SG = {
+  temas: ['la energía solar','la inteligencia artificial','los agujeros negros','la computación cuántica','el cambio climático','la fotosíntesis','el sistema inmunitario','la dieta mediterránea','el sueño','la meditación','la inflación','las criptomonedas','la bolsa de valores','el Imperio romano','la Revolución francesa','la Segunda Guerra Mundial','el Renacimiento','la mitología griega','la tectónica de placas','los volcanes','los océanos','las abejas','los dinosaurios','el ADN','las vacunas','la teoría de la relatividad','la gravedad','la electricidad','los coches eléctricos','la energía nuclear','el hidrógeno verde','la exploración de Marte','la Estación Espacial Internacional','el sistema solar','las galaxias','la teoría de juegos','la probabilidad','el álgebra','los números primos','la programación en Python','JavaScript','las bases de datos','la ciberseguridad','internet','el 5G','la robótica','la impresión 3D','la música clásica','el jazz','el flamenco','el cine de ciencia ficción','la arquitectura gótica','el arte moderno','la filosofía estoica','el existencialismo','la psicología de los hábitos','la memoria humana','la productividad','el minimalismo','el ahorro personal','las pensiones','el emprendimiento','el marketing digital','el teletrabajo','la economía circular','el reciclaje','la agricultura ecológica','el vino','el café','el chocolate','el ajedrez','el fútbol','el running','el yoga','la nutrición deportiva','la longevidad','el microbioma','la salud mental','el estrés','el bilingüismo','la lingüística','el origen del lenguaje','la Alhambra','el Camino de Santiago','la gastronomía andaluza','la Semana Santa','la Guerra Civil española','la Transición española','la Unión Europea','el euro','la democracia','el alquiler de vivienda','la fotografía','la astrofotografía','los telescopios','los drones','la realidad virtual','los videojuegos retro','la tabla periódica','los superconductores','los plásticos biodegradables','el efecto invernadero','los huracanes','la sequía','el ciclo del agua'],
+  plant: ['Explícame {x} con un ejemplo sencillo','Resume las últimas novedades sobre {x}','¿Qué debería saber sobre {x}?','Busca información fiable sobre {x}','Dame cinco datos curiosos sobre {x}','¿Cuáles son los mitos más comunes sobre {x}?','Hazme un esquema para estudiar {x}','Explícame {x} como si tuviera diez años','¿Qué debates hay hoy sobre {x}?','Prepárame un test de cinco preguntas sobre {x}','Recomiéndame libros o documentales sobre {x}','¿Qué errores se cometen al hablar de {x}?','Resúmeme en tres párrafos lo esencial sobre {x}','¿Cómo ha cambiado {x} en los últimos años?','Dame pros y contras sobre {x}','Compara dos puntos de vista distintos sobre {x}'],
+  ciudades: ['Lisboa','Roma','París','Tokio','Praga','Berlín','Ámsterdam','Londres','Nueva York','Marrakech','Estambul','Atenas','Viena','Budapest','Oporto','Edimburgo','Dublín','Copenhague','Buenos Aires','Ciudad de México','Lima','Bogotá','El Cairo','Bangkok','Seúl','Singapur','Cádiz','Granada','San Sebastián','Mallorca','Tenerife','Valencia','Bilbao','Salamanca','Toledo','Santiago de Compostela','Córdoba','Málaga'],
+  pc: ['Ayúdame a planificar un viaje a {x}','Plan de tres días en {x} con presupuesto ajustado','¿Cuál es la mejor época para visitar {x}?','¿Qué debo comer en {x}?','Dame un itinerario de fin de semana en {x}'],
+  habil: ['inglés','francés','alemán','italiano','japonés','estadística','matemáticas','fotografía','a programar','a dibujar','a cocinar','a tocar la guitarra','a tocar el piano','a hablar en público','a escribir mejor','a editar vídeo','a meditar','a nadar','a gestionar mi tiempo','a invertir con prudencia'],
+  ph: ['Ayúdame a aprender {x}','Hazme un plan de estudio de cuatro semanas para aprender {x}','¿Por dónde empiezo para aprender {x}?'],
+  ingr: ['pollo','huevos','garbanzos','lentejas','arroz','pasta','atún','berenjena','calabacín','patatas','espinacas','salmón','tofu','champiñones','pimientos','bacalao','tomate','calabaza','avena','plátano'],
+  pi: ['Dame una receta fácil con {x}','¿Qué puedo cenar hoy con {x}?'],
+  sueltas: ['Redacta un correo formal para pedir un día libre','Ayúdame a preparar una entrevista de trabajo','Dame ideas originales para el cumpleaños de un amigo','Crea una rutina de ejercicio de 20 minutos en casa','Ayúdame a organizar mi semana de estudio','Explícame cómo hacer un presupuesto mensual','Escribe un poema corto sobre el mar','Dame ideas de nombres para una cafetería','Hazme preguntas para conocerme mejor','Dame un reto mental para esta tarde','Cuéntame una curiosidad histórica poco conocida','Ayúdame a escribir una carta de presentación','Sugiéreme un plan para un domingo lluvioso','Explícame cómo funciona una hipoteca','Dame ideas para un proyecto de fin de semana','Escribe un cuento corto para dormir a un niño','Dame un truco para memorizar mejor','Explícame qué es un algoritmo con una analogía','Ayúdame a escribir un discurso de boda','Ayúdame a elegir un portátil para estudiar']
+};
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function oneSug() {
+  const r = Math.random();
+  if (r < .62) return pick(SG.plant).replace('{x}', pick(SG.temas));
+  if (r < .75) return pick(SG.pc).replace('{x}', pick(SG.ciudades));
+  if (r < .87) return pick(SG.ph).replace('{x}', pick(SG.habil));
+  if (r < .95) return pick(SG.pi).replace('{x}', pick(SG.ingr));
+  return pick(SG.sueltas);
+}
+const sugCache = {};  // las sugerencias de un chat no cambian mientras lo tengas abierto
+function sugFor(id) { if (!sugCache[id]) { const st = new Set(); while (st.size < 3) st.add(oneSug()); sugCache[id] = [...st] } return sugCache[id] }
+
 /* ---------- Chats ---------- */
 const chat = () => S.chats.find(c => c.id === S.cur);
 function newChat() {
@@ -379,11 +408,17 @@ $('#list').onclick = e => {
   if (a === 'pin') c.pinned = !c.pinned;
   else if (a === 'ren') { const n = prompt('Nuevo nombre del chat', c.title); if (n?.trim()) c.title = n.trim().slice(0, 60) }
   else if (a === 'del') { if (!confirm('¿Eliminar este chat? No se puede deshacer.')) return; S.chats = S.chats.filter(x => x !== c); if (S.cur === c.id) S.cur = S.chats[0]?.id }
-  else { S.cur = c.id; $('#side').classList.remove('open') }
+  else { S.cur = c.id; pruneEmpty(); $('#side').classList.remove('open') }
   save(); if (!S.chats.length) return newChat(); renderAll();
 };
 $('#q').oninput = renderList;
-$('#newChat').onclick = () => { newChat(); $('#side').classList.remove('open') };
+function pruneEmpty() { S.chats = S.chats.filter(c => c.msgs.length || c.id === S.cur) }
+$('#newChat').onclick = () => {
+  $('#side').classList.remove('open');
+  const c = chat();
+  if (c && !c.msgs.length) { toast('Ya tienes un chat vacío. Escribe algo para empezarlo.'); $('#inp').focus(); return }
+  newChat();
+};
 
 /* ---------- Render de mensajes (Markdown mínimo y seguro) ---------- */
 function md(t) {
@@ -407,7 +442,7 @@ function renderMsgs() {
     const n = (user?.name || '').split(' ')[0];
     w.innerHTML = `<div class="empty"><svg width="54" height="54" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0A1A3F"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <h2>Hola${n ? ', ' + esc(n) : ''}. ¿Qué investigamos?</h2><p>Pregunta, pide que busque algo o sube un archivo.</p>
-    <div class="sug">${['Resume las últimas noticias sobre energía solar', 'Explícame la computación cuántica con un ejemplo', 'Ayúdame a planificar un viaje a Lisboa'].map(s => `<button>${s}</button>`).join('')}</div></div>`;
+    <div class="sug">${sugFor(c?.id || 'x').map(s => `<button>${esc(s)}</button>`).join('')}</div></div>`;
     w.querySelectorAll('.sug button').forEach(b => b.onclick = () => { $('#inp').value = b.textContent; sendMsg() });
     return;
   }
@@ -517,12 +552,12 @@ $('#tabs').onclick = e => e.target.dataset.t && tab(e.target.dataset.t);
 $('#openSet').onclick = () => { $('#ov').classList.remove('hidden'); tab('p') };
 $('#cl').onclick = () => $('#ov').classList.add('hidden');
 $('#ov').onclick = e => e.target.id === 'ov' && $('#ov').classList.add('hidden');
-document.onkeydown = e => e.key === 'Escape' && $('#ov').classList.add('hidden');
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#ov').classList.add('hidden') });
 
 /* ---------- Arranque ---------- */
 function initApp() {
   $('#nm').textContent = user.name; $('#av').textContent = (user.name[0] || 'U').toUpperCase();
-  if (!S.chats.length) newChat(); else { S.cur = S.cur || S.chats[0].id; renderAll() }
+  if (!S.chats.length) newChat(); else { if (!S.chats.some(x => x.id === S.cur)) S.cur = S.chats[0].id; pruneEmpty(); save(); renderAll() }
   show('app');
 }
 setAuth('login');
