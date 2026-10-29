@@ -102,6 +102,11 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 .comp{padding:14px clamp(14px,4vw,40px) 20px}
 .box{max-width:780px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:10px 12px;box-shadow:0 10px 30px #0a1a3f14}
 .box textarea{width:100%;border:0;background:none;resize:none;outline:0;max-height:180px;padding:6px 4px}
+#thumbs{display:flex;gap:8px;flex-wrap:wrap}
+#thumbs:not(:empty){padding:4px 4px 8px}
+.pv{position:relative}.pv img{height:64px;border-radius:10px;border:1px solid var(--line);display:block}
+.pv button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:14px;line-height:1}
+.bub .imgs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}.bub .imgs img{max-width:200px;max-height:160px;border-radius:10px}
 .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--mut)}
 .chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -194,9 +199,10 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
     <div class="top"><button id="menu" aria-label="Menú">☰</button><h3 id="title">Nuevo chat</h3></div>
     <div id="msgs"><div class="wrap" id="wrap"></div></div>
     <div class="comp"><div class="box">
+      <div id="thumbs"></div>
       <textarea id="inp" rows="1" placeholder="Escribe tu mensaje a Nexora"></textarea>
       <div class="tools">
-        <label class="chip" style="cursor:pointer">📎 Adjuntar<input type="file" id="file" hidden multiple></label>
+        <label class="chip" style="cursor:pointer">📎 Imagen<input type="file" id="file" accept="image/*" hidden multiple></label>
         <button class="chip on" id="tSearch">🌐 Buscar en la web</button>
         <button class="chip" id="tThink">🧠 Pensar a fondo</button>
         <button id="send" aria-label="Enviar">↑</button>
@@ -429,7 +435,11 @@ function md(t) {
   return h.split(/\n{2,}/).map(p => /^<(pre|ul)/.test(p) ? p : `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
 }
 function msgHTML(m) {
-  if (m.role === 'user') return `<div class="m u"><div class="bub">${esc(m.text).replace(/\n/g, '<br>')}</div></div>`;
+  if (m.role === 'user') {
+    const im = (IMGS[m.id] || []).filter(d => d.startsWith('data:image/')).map(d => `<img src="${d}" alt="Imagen adjunta">`).join('');
+    const nota = !im && m.n ? `<div style="opacity:.8;font-size:13px">🖼 ${m.n} imagen(es) adjunta(s) · no se guardan al recargar</div>` : '';
+    return `<div class="m u"><div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
+  }
   const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
   // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
   const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
@@ -461,29 +471,58 @@ function systemPrompt() {
   return s;
 }
 
+/* ---------- Imágenes adjuntas (pegar con Ctrl+V, arrastrar o elegir archivo) ----------
+   Se reducen a 1280 px para ocupar poco. Solo viven en memoria: en la nube se guarda
+   únicamente cuántas imágenes tenía el mensaje (Firestore limita cada chat a 1 MiB). */
+let pending = [];
+const IMGS = {};
+function drawThumbs() {
+  $('#thumbs').innerHTML = pending.map(x => `<div class="pv"><img src="${x.data}" alt="Imagen adjunta"><button data-r="${x.id}" aria-label="Quitar imagen">×</button></div>`).join('');
+}
+async function addImage(file) {
+  if (!file || !/^image\//.test(file.type)) return toast('Por ahora solo se pueden adjuntar imágenes.');
+  if (pending.length >= 5) return toast('Máximo 5 imágenes por mensaje.');
+  try {
+    const bmp = await createImageBitmap(file), k = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(bmp, 0, 0, cv.width, cv.height);
+    pending.push({ id: uid(), data: cv.toDataURL('image/jpeg', .85) }); drawThumbs();
+  } catch { toast('No pude leer esa imagen.') }
+}
+$('#thumbs').onclick = e => { const r = e.target.dataset.r; if (r) { pending = pending.filter(x => x.id !== r); drawThumbs() } };
+$('#inp').addEventListener('paste', e => {
+  const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
+  if (fs.length) { e.preventDefault(); fs.forEach(addImage) }   // si no hay imagen, el pegado de texto es normal
+});
+$('.box').addEventListener('dragover', e => e.preventDefault());
+$('.box').addEventListener('drop', e => { e.preventDefault(); [...e.dataTransfer.files].forEach(addImage) });
+
 /* ---------- Envío ---------- */
 async function askAI(c) {
   // Fase 3: el proxy servirá en streaming. Por ahora espera JSON {text, reasoning, sources}.
   if (!CONFIG.proxyUrl) {
     await new Promise(r => setTimeout(r, 900));
     return {
-      text: 'Estoy en **modo demo**: la interfaz funciona, pero aún no hay un modelo conectado.\n\nPara activarme en la Fase 3 necesito:\n- Un proxy serverless (Cloudflare Worker) con tu clave de la API de IA\n- Una API de búsqueda web (Tavily o Brave)\n\nTu perfil y tus recuerdos ya se envían como contexto en cada mensaje.',
+      text: ((IMGS[c.msgs[c.msgs.length - 1].id] || []).length ? '🖼 He recibido tu imagen, pero en modo demo no puedo verla todavía.\n\n' : '') + 'Estoy en **modo demo**: la interfaz funciona, pero aún no hay un modelo conectado.\n\nPara activarme en la Fase 3 necesito:\n- Un proxy serverless (Cloudflare Worker) con tu clave de la API de IA\n- Una API de búsqueda web (Tavily o Brave)\n\nTu perfil y tus recuerdos ya se envían como contexto en cada mensaje.',
       reasoning: think ? 'Detecto que no hay `proxyUrl` configurado, así que respondo con una guía en lugar de inventar una respuesta.' : '',
       sources: []
     };
   }
   const r = await fetch(CONFIG.proxyUrl, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system: systemPrompt(), messages: c.msgs.map(m => ({ role: m.role, content: m.text })), think, search })
+    body: JSON.stringify({ system: systemPrompt(), messages: c.msgs.map(m => ({ role: m.role, content: m.text, images: IMGS[m.id] || [] })), think, search })
   });
   if (!r.ok) throw new Error('El servidor respondió ' + r.status);
   return r.json();
 }
 async function sendMsg() {
-  const t = $('#inp').value.trim(); if (!t || busy) return;
+  let t = $('#inp').value.trim(); if ((!t && !pending.length) || busy) return;
+  if (!t) t = '(imagen)';
   if (!chat()) newChat();
   const c = chat(); busy = true; $('#send').disabled = true;
-  c.msgs.push({ role: 'user', text: t }); c.ts = Date.now();
+  const mid = uid(); c.msgs.push({ id: mid, role: 'user', text: t, n: pending.length }); c.ts = Date.now();
+  if (pending.length) IMGS[mid] = pending.map(x => x.data);
+  pending = []; drawThumbs();
   if (c.msgs.length === 1) c.title = t.slice(0, 40);
   $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
   $('#wrap').insertAdjacentHTML('beforeend', '<div class="m a" id="typing"><div class="bub dots"><span></span><span></span><span></span></div></div>');
@@ -501,7 +540,7 @@ $('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDe
 $('#inp').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' };
 $('#tSearch').onclick = e => { search = !search; e.currentTarget.classList.toggle('on', search) };
 $('#tThink').onclick = e => { think = !think; e.currentTarget.classList.toggle('on', think) };
-$('#file').onchange = e => { if (e.target.files.length) toast(e.target.files.length + ' archivo(s) listos. El análisis llega en la Fase 3.') };
+$('#file').onchange = e => { [...e.target.files].forEach(addImage); e.target.value = '' };
 $('#menu').onclick = () => $('#side').classList.toggle('open');
 
 /* ---------- Panel de perfil, memoria, conectores y ajustes ---------- */
