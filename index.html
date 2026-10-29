@@ -96,6 +96,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 .src{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
 .src a{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--navy3);text-decoration:none}
 :root[data-theme=dark] .src a{color:var(--cyan)}
+.sx{border:0;width:100%;height:56px;margin-top:8px}
 .dots span{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:var(--navy3);animation:b 1s infinite}
 .dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
 @keyframes b{50%{transform:translateY(-5px);opacity:.4}}
@@ -227,7 +228,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
    ===================================================================== */
 const CONFIG = {
   firebase: { apiKey: "AIzaSyDbNl-hFXLJRpQg_c0CB8ues1cZ4WjoN4g", authDomain: "nexora-67635.firebaseapp.com", projectId: "nexora-67635", appId: "1:442376896786:web:9252d12d1bdb1c27ef73cb" },
-  proxyUrl: "",              // URL de tu Cloudflare Worker / Function    → Fase 3
+  proxyUrl: "https://nexoria-ia.isaaclaynezgonzaleztrabajo.workers.dev/",              // URL de tu Cloudflare Worker / Function    → Fase 3
   googleClientId: ""         // OAuth Client ID para conectores           → Fase 5
 };
 
@@ -443,7 +444,8 @@ function msgHTML(m) {
   const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
   // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
   const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
-  return `<div class="m a"><div class="bub">${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}</div></div>`;
+  const ent = m.entry ? `<iframe class="sx" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${esc(m.entry)}" title="Sugerencias de búsqueda de Google"></iframe>` : '';
+  return `<div class="m a"><div class="bub">${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}</div></div>`;
 }
 function renderMsgs() {
   const c = chat(), w = $('#wrap');
@@ -497,23 +499,49 @@ $('#inp').addEventListener('paste', e => {
 $('.box').addEventListener('dragover', e => e.preventDefault());
 $('.box').addEventListener('drop', e => { e.preventDefault(); [...e.dataTransfer.files].forEach(addImage) });
 
-/* ---------- Envío ---------- */
-async function askAI(c) {
-  // Fase 3: el proxy servirá en streaming. Por ahora espera JSON {text, reasoning, sources}.
-  if (!CONFIG.proxyUrl) {
+/* ---------- Envío y respuesta en streaming (Gemini a través del proxy) ---------- */
+async function askAI(c, onTick) {
+  if (!CONFIG.proxyUrl) {   // Sin proxy: respuesta de demostración
     await new Promise(r => setTimeout(r, 900));
     return {
-      text: ((IMGS[c.msgs[c.msgs.length - 1].id] || []).length ? '🖼 He recibido tu imagen, pero en modo demo no puedo verla todavía.\n\n' : '') + 'Estoy en **modo demo**: la interfaz funciona, pero aún no hay un modelo conectado.\n\nPara activarme en la Fase 3 necesito:\n- Un proxy serverless (Cloudflare Worker) con tu clave de la API de IA\n- Una API de búsqueda web (Tavily o Brave)\n\nTu perfil y tus recuerdos ya se envían como contexto en cada mensaje.',
-      reasoning: think ? 'Detecto que no hay `proxyUrl` configurado, así que respondo con una guía en lugar de inventar una respuesta.' : '',
-      sources: []
+      text: ((IMGS[c.msgs[c.msgs.length - 1].id] || []).length ? '🖼 He recibido tu imagen, pero en modo demo no puedo verla todavía.\n\n' : '') +
+        'Estoy en **modo demo**: la interfaz funciona, pero aún no hay un modelo conectado.\n\nPega la URL de tu proxy en `CONFIG.proxyUrl` para activarme.',
+      reasoning: '', sources: []
     };
   }
+  if (!CONFIG.firebase || !Cloud.on || !Cloud.auth.currentUser) throw new Error('Inicia sesión con tu cuenta para usar la IA.');
+  const token = await Cloud.auth.currentUser.getIdToken();
   const r = await fetch(CONFIG.proxyUrl, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
     body: JSON.stringify({ system: systemPrompt(), messages: c.msgs.map(m => ({ role: m.role, content: m.text, images: IMGS[m.id] || [] })), think, search })
   });
-  if (!r.ok) throw new Error('El servidor respondió ' + r.status);
-  return r.json();
+  if (!r.ok) {
+    const e = { 401: 'Tu sesión no es válida. Cierra sesión y vuelve a entrar.', 403: 'El proxy rechazó la petición (revisa ALLOWED_ORIGIN).', 429: 'Se alcanzó el límite gratuito de Gemini. Espera un poco o desactiva "Pensar a fondo".' }[r.status];
+    throw new Error(e || 'El servidor respondió ' + r.status);
+  }
+  // Lee el flujo SSE de Gemini: cada "data:" trae un trozo de texto, de razonamiento o metadatos de búsqueda
+  const out = { text: '', reasoning: '', sources: [], entry: '' };
+  const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
+  try {
+    for (;;) {
+      const { done, value } = await rd.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const ln of lines) {
+        if (!ln.startsWith('data:')) continue;
+        let j; try { j = JSON.parse(ln.slice(5)) } catch { continue }
+        const cand = j.candidates?.[0];
+        for (const p of cand?.content?.parts || []) { if (p.text) { if (p.thought) out.reasoning += p.text; else out.text += p.text } }
+        const gm = cand?.groundingMetadata;
+        if (gm) {
+          for (const g of gm.groundingChunks || []) if (g.web?.uri && !out.sources.some(x => x.url === g.web.uri)) out.sources.push({ url: g.web.uri, title: g.web.title || '' });
+          if (gm.searchEntryPoint?.renderedContent) out.entry = gm.searchEntryPoint.renderedContent;
+        }
+        onTick(out);
+      }
+    }
+  } catch { if (out.text) out.text += '\n\n*(respuesta interrumpida)*'; else throw new Error('Se cortó la conexión. Inténtalo de nuevo.') }
+  return out;
 }
 async function sendMsg() {
   let t = $('#inp').value.trim(); if ((!t && !pending.length) || busy) return;
@@ -523,15 +551,21 @@ async function sendMsg() {
   const mid = uid(); c.msgs.push({ id: mid, role: 'user', text: t, n: pending.length }); c.ts = Date.now();
   if (pending.length) IMGS[mid] = pending.map(x => x.data);
   pending = []; drawThumbs();
-  if (c.msgs.length === 1) c.title = t.slice(0, 40);
+  if (c.msgs.length === 1) c.title = t === '(imagen)' ? 'Imagen' : t.slice(0, 40);
   $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
-  $('#wrap').insertAdjacentHTML('beforeend', '<div class="m a" id="typing"><div class="bub dots"><span></span><span></span><span></span></div></div>');
+  $('#wrap').insertAdjacentHTML('beforeend', '<div id="typing"><div class="m a"><div class="bub dots"><span></span><span></span><span></span></div></div></div>');
   $('#msgs').scrollTop = 1e9;
+  let raf = 0;
+  const tick = o => { if (raf) return; raf = requestAnimationFrame(() => {
+    raf = 0; const el = $('#typing'); if (!el) return;
+    const m = $('#msgs'), near = m.scrollHeight - m.scrollTop - m.clientHeight < 120;
+    el.innerHTML = msgHTML({ role: 'assistant', text: o.text, reasoning: o.reasoning, sources: [] }); if (near) m.scrollTop = 1e9;
+  }) };
   try {
-    const r = await askAI(c);
-    c.msgs.push({ role: 'assistant', text: r.text || '(sin respuesta)', reasoning: r.reasoning, sources: r.sources });
+    const r = await askAI(c, tick);
+    c.msgs.push({ role: 'assistant', text: r.text || '(sin respuesta)', reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' });
   } catch (e) {
-    c.msgs.push({ role: 'assistant', text: 'No pude responder: ' + e.message + '. Revisa la configuración del proxy e inténtalo de nuevo.' });
+    c.msgs.push({ role: 'assistant', text: 'No pude responder: ' + e.message });
   }
   busy = false; $('#send').disabled = false; save(); renderAll();
 }
