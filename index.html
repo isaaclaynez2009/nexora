@@ -117,6 +117,12 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 
 /* ===== Ajustes (modal) ===== */
 .ov{position:fixed;inset:0;background:#050c1eaa;display:grid;place-items:center;padding:16px;z-index:20}
+.dlg{width:min(400px,100%)!important;display:block!important;padding:26px}
+.dlg h4{font-family:var(--serif);font-size:21px;margin-bottom:6px}
+.dlg p{color:var(--mut);margin-bottom:16px}
+.dlg input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--bg);margin:6px 0 16px}
+.dlg .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.btn.danger{background:#D93651!important;color:#fff!important;box-shadow:none!important}
 .modal{width:min(680px,100%);max-height:90vh;background:var(--card);border-radius:22px;display:flex;flex-direction:column;overflow:hidden}
 .mh{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);font-weight:800}
 .mh button{margin-left:auto;font-size:20px;color:var(--mut)}
@@ -244,6 +250,10 @@ html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8A
 </div>
 
 <!-- ===== AJUSTES ===== -->
+<div class="ov hidden" id="dlg" style="z-index:40"><div class="modal dlg" role="alertdialog" aria-modal="true" aria-labelledby="dT">
+  <h4 id="dT"></h4><p id="dP"></p><input id="dI" class="hidden" maxlength="60" aria-label="Texto">
+  <div class="acts"><button class="btn ghost" id="dNo">Cancelar</button><button class="btn pri" id="dYes">Aceptar</button></div>
+</div></div>
 <div class="ov hidden" id="ov"><div class="modal" role="dialog" aria-modal="true">
   <div class="mh">Perfil y ajustes<button id="cl" aria-label="Cerrar"><i data-ic="close" data-s="20"></i></button></div>
   <div class="tabs" id="tabs"><button data-t="p" class="on">Perfil</button><button data-t="m">Memoria</button><button data-t="c">Conectores</button><button data-t="s">Ajustes</button></div>
@@ -477,6 +487,23 @@ function oneSug() {
 const sugCache = {};  // las sugerencias de un chat no cambian mientras lo tengas abierto
 function sugFor(id) { if (!sugCache[id]) { const st = new Set(); while (st.size < 3) st.add(oneSug()); sugCache[id] = [...st] } return sugCache[id] }
 
+/* ---------- Diálogo propio (confirmar / pedir un texto) ---------- */
+function ask({ title, text = '', value = null, ok = 'Aceptar', danger = false }) {
+  return new Promise(res => {
+    const d = $('#dlg'), inp = $('#dI'), y = $('#dYes'), n = $('#dNo');
+    $('#dT').textContent = title; $('#dP').textContent = text; $('#dP').classList.toggle('hidden', !text);
+    inp.classList.toggle('hidden', value === null); inp.value = value ?? '';
+    y.textContent = ok; y.classList.toggle('danger', danger); y.classList.toggle('pri', !danger);
+    d.classList.remove('hidden'); if (value === null) y.focus(); else { inp.focus(); inp.select() }
+    const done = v => { d.classList.add('hidden'); document.removeEventListener('keydown', onKey, true); res(v) };
+    const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(value === null ? false : null) } else if (e.key === 'Enter' && value !== null) { e.preventDefault(); y.onclick() } };
+    document.addEventListener('keydown', onKey, true);
+    y.onclick = () => done(value === null ? true : inp.value.trim() || null);
+    n.onclick = () => done(value === null ? false : null);
+    d.onclick = e => { if (e.target === d) n.onclick() };
+  });
+}
+
 /* ---------- Chats ---------- */
 const chat = () => S.chats.find(c => c.id === S.cur);
 function newChat() {
@@ -492,12 +519,17 @@ function renderList() {
     <span class="ac"><button data-a="pin" title="Fijar">${ic('pin', 15)}</button><button data-a="ren" title="Renombrar">${ic('pencil', 15)}</button><button data-a="del" title="Eliminar">${ic('trash', 15)}</button></span></div>`).join('')
     : '<div class="lbl">Sin resultados</div>';
 }
-$('#list').onclick = e => {
+$('#list').onclick = async e => {
   const row = e.target.closest('.ci'); if (!row) return;
-  const c = S.chats.find(x => x.id === row.dataset.id), a = e.target.closest('[data-a]')?.dataset.a;
+  const c = S.chats.find(x => x.id === row.dataset.id), a = e.target.closest('[data-a]')?.dataset.a; if (!c) return;
   if (a === 'pin') c.pinned = !c.pinned;
-  else if (a === 'ren') { const n = prompt('Nuevo nombre del chat', c.title); if (n?.trim()) c.title = n.trim().slice(0, 60) }
-  else if (a === 'del') { if (!confirm('¿Eliminar este chat? No se puede deshacer.')) return; S.chats = S.chats.filter(x => x !== c); if (S.cur === c.id) S.cur = S.chats[0]?.id }
+  else if (a === 'ren') { const n = await ask({ title: 'Renombrar chat', value: c.title, ok: 'Guardar' }); if (!n) return; c.title = n.slice(0, 60) }
+  else if (a === 'del') {
+    if (!await ask({ title: '¿Eliminar este chat?', text: 'Se borrará con todos sus mensajes y no se puede deshacer.', ok: 'Eliminar', danger: true })) return;
+    S.chats = S.chats.filter(x => x !== c);
+    if (S.cur === c.id) S.cur = S.chats.find(x => x.msgs.length)?.id || null;
+    if (!S.cur) { save(); return newChat() }
+  }
   else { S.cur = c.id; pruneEmpty(); $('#side').classList.remove('open') }
   save(); if (!S.chats.length) return newChat(); renderAll();
 };
@@ -545,6 +577,7 @@ function renderMsgs() {
     return;
   }
   w.innerHTML = c.msgs.map(msgHTML).join('');
+  if (live && live.id === c.id) w.insertAdjacentHTML('beforeend', typingHTML());
   $('#msgs').scrollTop = 1e9;
 }
 $('#wrap').onclick = e => { if (e.target.classList.contains('cp')) { navigator.clipboard.writeText(e.target.nextElementSibling.textContent); toast('Código copiado') } };
@@ -604,7 +637,7 @@ async function askAI(c, onTick) {
   if (!r.ok) {
     const raw = await r.text().catch(() => ''); let det = ''; try { det = JSON.parse(raw).error?.message || '' } catch { det = raw }
     const e = { 401: 'Tu sesión no es válida. Cierra sesión y vuelve a entrar.', 403: 'El proxy rechazó la petición (revisa ALLOWED_ORIGIN).', 429: 'Gemini dice que se alcanzó el límite.' }[r.status];
-    throw new Error((e || 'Gemini respondió ' + r.status + '.') + (det ? ' Detalle: ' + det.slice(0, 240) : ''));
+    throw new Error((e || 'Gemini respondió ' + r.status + '.') + (det ? ' Detalle: ' + det.slice(0, 700) : ''));
   }
   // Lee el flujo SSE de Gemini: cada "data:" trae un trozo de texto, de razonamiento o metadatos de búsqueda
   const out = { text: r.headers.get('X-Nexora-Search') === 'off' ? '*(La búsqueda web no estaba disponible ahora, así que respondo sin ella.)*\n\n' : '', reasoning: '', sources: [], entry: '' };
@@ -630,8 +663,11 @@ async function askAI(c, onTick) {
   } catch { if (out.text) out.text += '\n\n*(respuesta interrumpida)*'; else throw new Error('Se cortó la conexión. Inténtalo de nuevo.') }
   return out;
 }
+let live = null;   // respuesta en curso: { id del chat, o: texto parcial }
+const typingHTML = () => `<div id="typing">${live.o && (live.o.text || live.o.reasoning) ? msgHTML({ role: 'assistant', text: live.o.text, reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
 async function sendMsg() {
-  let t = $('#inp').value.trim(); if ((!t && !pending.length) || busy) return;
+  let t = $('#inp').value.trim(); if (!t && !pending.length) return;
+  if (busy) return toast('Nexora aún está respondiendo. Espera un momento.');
   if (!t) t = '(imagen)';
   if (!chat()) newChat();
   const c = chat(); busy = true; $('#send').disabled = true;
@@ -639,22 +675,23 @@ async function sendMsg() {
   if (pending.length) IMGS[mid] = pending.map(x => x.data);
   pending = []; drawThumbs();
   if (c.msgs.length === 1) c.title = t === '(imagen)' ? 'Imagen' : t.slice(0, 40);
+  live = { id: c.id, o: null };
   $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
-  $('#wrap').insertAdjacentHTML('beforeend', '<div id="typing"><div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div></div>');
-  $('#msgs').scrollTop = 1e9;
   let raf = 0;
-  const tick = o => { if (raf) return; raf = requestAnimationFrame(() => {
-    raf = 0; const el = $('#typing'); if (!el) return;
+  const tick = o => { if (live) live.o = o; if (raf) return; raf = requestAnimationFrame(() => {
+    raf = 0; const el = $('#typing'); if (!el || !live) return;
     const m = $('#msgs'), near = m.scrollHeight - m.scrollTop - m.clientHeight < 120;
-    el.innerHTML = msgHTML({ role: 'assistant', text: o.text, reasoning: o.reasoning, sources: [] }); if (near) m.scrollTop = 1e9;
+    el.outerHTML = typingHTML(); if (near) m.scrollTop = 1e9;
   }) };
+  let reply;
   try {
     const r = await askAI(c, tick);
-    c.msgs.push({ role: 'assistant', text: r.text || '(sin respuesta)', reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' });
-  } catch (e) {
-    c.msgs.push({ role: 'assistant', text: 'No pude responder: ' + e.message });
-  }
-  busy = false; $('#send').disabled = false; save(); renderAll();
+    reply = { role: 'assistant', text: (r.fallback ? '**Aviso:** la búsqueda web no estuvo disponible, así que respondo sin consultar internet.\n\n' : '') + (r.text || '(sin respuesta)'), reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' };
+  } catch (e) { reply = { role: 'assistant', text: 'No pude responder: ' + e.message } }
+  live = null; busy = false; $('#send').disabled = false;
+  // Si borraste el chat mientras Nexora respondía, la respuesta se descarta
+  if (S.chats.includes(c)) { c.msgs.push(reply); c.ts = Date.now(); save() }
+  renderAll();
 }
 $('#send').onclick = sendMsg;
 $('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } };
@@ -687,7 +724,7 @@ function tab(t) {
     $('#ma').onclick = () => { const v = $('#mi').value.trim(); if (v) { S.memory.push(v.slice(0, 300)); save(); $('#mi').value = ''; draw() } };
     $('#ml').onclick = e => {
       if (e.target.dataset.d) S.memory.splice(+e.target.dataset.d, 1);
-      else if (e.target.dataset.e) { const i = +e.target.dataset.e, n = prompt('Editar recuerdo', S.memory[i]); if (n?.trim()) S.memory[i] = n.trim() }
+      else if (e.target.dataset.e) { const i = +e.target.dataset.e; ask({ title: 'Editar recuerdo', value: S.memory[i], ok: 'Guardar' }).then(n => { if (n) { S.memory[i] = n; save(); draw() } }); return }
       else return; save(); draw();
     };
   }
@@ -703,8 +740,8 @@ function tab(t) {
     $('.pals').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return; S.settings.pal = b.dataset.p; save(); applyTheme(); tab('s') };
     $('#sT').value = S.settings.theme; $('#sT').onchange = e => { S.settings.theme = e.target.value; save(); applyTheme() };
     $('#sX').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); a.download = 'nexora-datos.json'; a.click() };
-    $('#sD').onclick = () => {
-      if (!confirm('Se borrarán tu cuenta, chats y memoria. ¿Continuar?')) return;
+    $('#sD').onclick = async () => {
+      if (!await ask({ title: '¿Eliminar tu cuenta?', text: 'Se borrarán tu cuenta, tus chats y tu memoria. No se puede deshacer.', ok: 'Eliminar todo', danger: true })) return;
       if (Cloud.on) { $('#ov').classList.add('hidden'); return Cloud.del() }
       const u = LS.get('nx_users', {}); delete u[user.email]; LS.set('nx_users', u); localStorage.removeItem(key()); $('#out').click(); $('#ov').classList.add('hidden');
     };
