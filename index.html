@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nexora</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230A1A3F'/><path d='M9 23V9l14 14V9' stroke='%2322D3EE' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
 <style>
 /* ===== Tokens de diseño ===== */
-:root{--navy:#0A1A3F;--navy2:#12286B;--navy3:#1B3A8C;--cyan:#22D3EE;--bg:#F6F8FC;--card:#fff;--ink:#0A1A3F;--mut:#5B6785;--line:#E2E8F3;--side:#0A1A3F;--sideink:#DCE6FF;--r:16px}
+:root{--navy:#0A1A3F;--navy2:#12286B;--navy3:#1B3A8C;--cyan:var(--a2);--bg:#F6F8FC;--card:#fff;--ink:#0A1A3F;--mut:#5B6785;--line:#E2E8F3;--side:#0A1A3F;--sideink:#DCE6FF;--r:16px}
 :root[data-theme=dark]{--bg:#070F26;--card:#0E1B40;--ink:#EAF0FF;--mut:#9AA8CC;--line:#1E2F63;--side:#050C1E}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%}
@@ -25,7 +25,7 @@ button{cursor:pointer;border:0;background:none}
 .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:.2px}
 
 /* ===== Bienvenida ===== */
-#welcome{min-height:100%;background:radial-gradient(900px 500px at 80% -10%,#2B5BE0 0%,transparent 60%),radial-gradient(700px 500px at 0% 100%,#0e7490 0%,transparent 55%),var(--navy);color:#fff;display:flex;flex-direction:column;padding:28px clamp(20px,6vw,80px)}
+#welcome{min-height:100%;background:radial-gradient(900px 500px at 80% -10%,var(--a1) 0%,transparent 60%),radial-gradient(700px 500px at 0% 100%,var(--navy3) 0%,transparent 55%),var(--navy);color:#fff;display:flex;flex-direction:column;padding:28px clamp(20px,6vw,80px)}
 #welcome header{display:flex;justify-content:space-between;align-items:center}
 .hero{margin:auto 0;max-width:760px;padding:60px 0}
 .hero h1{font-size:clamp(38px,7vw,72px);line-height:1.04;font-weight:800;letter-spacing:-1.5px}
@@ -50,7 +50,7 @@ button{cursor:pointer;border:0;background:none}
 #app{height:100%;display:grid;grid-template-columns:292px 1fr}
 aside{background:var(--side);color:var(--sideink);display:flex;flex-direction:column;padding:16px;gap:12px;min-height:0}
 aside .logo{color:#fff;padding:4px 6px}
-#newChat{background:linear-gradient(135deg,#2B5BE0,#22D3EE);color:#04122e;font-weight:800;padding:12px;border-radius:12px}
+#newChat{background:linear-gradient(135deg,var(--a1),var(--a2));color:#04122e;font-weight:800;padding:12px;border-radius:12px}
 #q{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #ffffff22;background:#ffffff0f;color:#fff}
 #q::placeholder{color:#8fa3d6}
 #list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:2px}
@@ -112,7 +112,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 .chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--mut)}
 .chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 :root[data-theme=dark] .chip.on{background:var(--cyan);color:var(--navy);border-color:var(--cyan)}
-#send{margin-left:auto;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2B5BE0,#22D3EE);color:#04122e;font-weight:800;font-size:18px}
+#send{margin-left:auto;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));color:#04122e;font-weight:800;font-size:18px}
 #send:disabled{opacity:.4}
 
 /* ===== Ajustes (modal) ===== */
@@ -134,6 +134,36 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:12px;z-index:30;opacity:0;transition:opacity .25s;pointer-events:none}
 #toast.on{opacity:1}
 
+/* ===== v2: paletas, tipografía y detalles ===== */
+:root{--a1:#2B5BE0;--a2:#22D3EE;--cyan:var(--a2);--bg:#F7F5F0}
+html[data-pal=aurora]{--navy:#2A1456;--navy2:#4B2A93;--navy3:#6B3FD0;--a1:#8B5CF6;--a2:#F472B6;--side:#1E0F40}
+html[data-pal=bosque]{--navy:#0C2E2B;--navy2:#13524B;--navy3:#1F7A6E;--a1:#2DBE8C;--a2:#C4E86B;--side:#082220}
+html[data-pal=atardecer]{--navy:#3B1230;--navy2:#7A2748;--navy3:#C2456A;--a1:#FF7A59;--a2:#FFC857;--side:#2A0C23}
+html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8AA5;--a2:#E2C275;--side:#0F1115}
+.logo,.hero h1,.panel h2,.mh,.top h3{font-family:Fraunces,Georgia,serif}
+.logo{font-weight:700;letter-spacing:-.3px}
+.ic{display:block;flex:none}.ci .t .ic{display:inline;vertical-align:-2px}
+.chip,#out,.ac button,#openSet,#send,#cl,#menu{align-items:center;justify-content:center;gap:7px}
+.chip,#send,#cl{display:inline-flex}#out,#newChat{display:flex;align-items:center;justify-content:center;gap:8px}
+#openSet,.ac button{display:inline-flex}
+.hero h1 em{font-style:italic;font-weight:500;color:var(--a2)}
+#msgs{background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:24px 24px}
+.m.a{gap:12px}.av2{flex:none;margin-top:1px}
+.a .bub{background:none;border:0;padding:2px 0;max-width:100%}
+.u .bub{background:var(--navy);border-radius:20px 20px 5px 20px}
+.empty{position:relative;text-align:left;max-width:640px;margin:9vh auto 0}
+.blob{position:absolute;z-index:-1;right:-30px;top:-30px;width:320px;height:280px;border-radius:58% 42% 62% 38%/46% 58% 42% 54%;background:linear-gradient(135deg,var(--a1),var(--a2));opacity:.16}
+.empty .kick{font-family:Fraunces,serif;font-style:italic;font-size:19px;color:var(--navy3);margin-top:16px}
+:root[data-theme=dark] .empty .kick{color:var(--a2)}
+.empty h2{font-size:clamp(32px,5.4vw,50px);line-height:1.06;letter-spacing:-.8px;margin:4px 0 12px}
+.empty .lead{max-width:460px;color:var(--mut)}
+.sug{justify-content:flex-start;gap:16px;margin-top:28px}
+.sug button{border-radius:14px;text-align:left;padding:14px 16px;width:200px;line-height:1.35;font-weight:600;box-shadow:4px 4px 0 var(--a2);transition:transform .2s}
+.sug button:nth-child(1){transform:rotate(-1.4deg)}.sug button:nth-child(2){transform:rotate(.9deg)}.sug button:nth-child(3){transform:rotate(-.6deg)}
+.sug button:hover{transform:rotate(0) translateY(-3px)}
+.pals{display:flex;gap:12px;margin-top:8px}
+.pal{width:36px;height:36px;border-radius:50%;border:3px solid var(--card);outline:2px solid var(--line)}.pal.on{outline-color:var(--a1)}
+.con i{display:grid;place-items:center;color:var(--navy3)}
 @media(max-width:800px){
  #app{grid-template-columns:1fr}
  aside{position:fixed;inset:0 25% 0 0;z-index:10;transform:translateX(-100%);transition:transform .25s}
@@ -148,14 +178,14 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 <!-- ===== BIENVENIDA ===== -->
 <section id="welcome">
   <header>
-    <div class="logo"><svg id="lg1" width="34" height="34" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#12286B"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Nexora</div>
+    <div class="logo"><i data-logo="34"></i>Nexora</div>
     <button class="btn light" data-go="login">Iniciar sesión</button>
   </header>
   <div class="hero">
-    <h1>Pregunta lo que quieras. Nexora lo investiga contigo.</h1>
-    <p>Un asistente que busca en la web, cita sus fuentes, recuerda lo que le cuentas y trabaja con tus documentos de Google.</p>
+    <h1>Pregunta lo que quieras.<br><em>Nexora lo busca contigo.</em></h1>
+    <p>Un asistente que busca en la web, te enseña de dónde saca cada dato y se acuerda de lo que le cuentas. Sin prisas y sin rodeos.</p>
     <div class="row">
-      <button class="btn pri" style="background:linear-gradient(135deg,#2B5BE0,#22D3EE);color:#04122e" data-go="register">Crear cuenta gratis</button>
+      <button class="btn pri" style="background:linear-gradient(135deg,var(--a1),var(--a2));color:#04122e" data-go="register">Crear cuenta gratis</button>
       <button class="btn light" data-go="login">Ya tengo cuenta</button>
     </div>
   </div>
@@ -170,7 +200,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 <!-- ===== ACCESO ===== -->
 <section id="auth" class="hidden">
   <div class="panel">
-    <div class="logo"><svg width="30" height="30" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0A1A3F"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Nexora</div>
+    <div class="logo"><i data-logo="30"></i>Nexora</div>
     <h2 id="authT">Iniciar sesión</h2>
     <p class="s" id="authS">Entra para recuperar tus chats y tu memoria.</p>
     <button class="gbtn" id="gLogin"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continuar con Google</button>
@@ -180,6 +210,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
     <label class="field">Contraseña<input id="aPass" type="password" autocomplete="current-password"></label>
     <div class="err" id="aErr"></div>
     <button class="btn pri" style="width:100%" id="aGo">Entrar</button>
+    <p class="s" style="text-align:center;margin:12px 0 0"><a href="#" id="aForgot" style="color:var(--navy3)">¿Olvidaste tu contraseña?</a></p>
     <p class="s" style="text-align:center;margin:14px 0 0"><a href="#" id="aSwap" style="color:var(--navy3)">¿No tienes cuenta? Regístrate</a></p>
     <p class="note" id="demoNote" style="margin:14px 0 0">Modo demo: Firebase aún no está configurado, así que tu cuenta y tus chats se guardan solo en este navegador.</p>
   </div>
@@ -188,25 +219,25 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 <!-- ===== APP ===== -->
 <div id="app" class="hidden">
   <aside id="side">
-    <div class="logo"><svg width="30" height="30" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#12286B"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Nexora</div>
-    <button id="newChat">+ Nuevo chat</button>
+    <div class="logo"><i data-logo="30"></i>Nexora</div>
+    <button id="newChat"><i data-ic="plus" data-s="16"></i> Nuevo chat</button>
     <input id="q" placeholder="Buscar en tus chats" aria-label="Buscar chats">
     <div id="list"></div>
     <div class="me"><div class="av" id="av">U</div><div class="nm" id="nm">Usuario</div>
-      <button id="openSet" title="Perfil y ajustes">⚙</button></div>
-    <button id="out">Cerrar sesión</button>
+      <button id="openSet" title="Perfil y ajustes" aria-label="Perfil y ajustes"><i data-ic="sliders" data-s="20"></i></button></div>
+    <button id="out"><i data-ic="logout" data-s="16"></i> Cerrar sesión</button>
   </aside>
   <main>
-    <div class="top"><button id="menu" aria-label="Menú">☰</button><h3 id="title">Nuevo chat</h3></div>
+    <div class="top"><button id="menu" aria-label="Menú"><i data-ic="menu" data-s="22"></i></button><h3 id="title">Nuevo chat</h3></div>
     <div id="msgs"><div class="wrap" id="wrap"></div></div>
     <div class="comp"><div class="box">
       <div id="thumbs"></div>
       <textarea id="inp" rows="1" placeholder="Escribe tu mensaje a Nexora"></textarea>
       <div class="tools">
-        <label class="chip" style="cursor:pointer">📎 Imagen<input type="file" id="file" accept="image/*" hidden multiple></label>
-        <button class="chip on" id="tSearch">🌐 Buscar en la web</button>
-        <button class="chip" id="tThink">🧠 Pensar a fondo</button>
-        <button id="send" aria-label="Enviar">↑</button>
+        <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Imagen<input type="file" id="file" accept="image/*" hidden multiple></label>
+        <button class="chip on" id="tSearch"><i data-ic="globe" data-s="16"></i> Buscar en la web</button>
+        <button class="chip" id="tThink"><i data-ic="brain" data-s="16"></i> Pensar a fondo</button>
+        <button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
       </div>
     </div></div>
   </main>
@@ -214,7 +245,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
 
 <!-- ===== AJUSTES ===== -->
 <div class="ov hidden" id="ov"><div class="modal" role="dialog" aria-modal="true">
-  <div class="mh">Perfil y ajustes<button id="cl" aria-label="Cerrar">×</button></div>
+  <div class="mh">Perfil y ajustes<button id="cl" aria-label="Cerrar"><i data-ic="close" data-s="20"></i></button></div>
   <div class="tabs" id="tabs"><button data-t="p" class="on">Perfil</button><button data-t="m">Memoria</button><button data-t="c">Conectores</button><button data-t="s">Ajustes</button></div>
   <div class="mb" id="mb"></div>
 </div></div>
@@ -228,7 +259,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
    ===================================================================== */
 const CONFIG = {
   firebase: { apiKey: "AIzaSyDbNl-hFXLJRpQg_c0CB8ues1cZ4WjoN4g", authDomain: "nexora-67635.firebaseapp.com", projectId: "nexora-67635", appId: "1:442376896786:web:9252d12d1bdb1c27ef73cb" },
-  proxyUrl: "https://nexoria-ia.isaaclaynezgonzaleztrabajo.workers.dev/",              // URL de tu Cloudflare Worker / Function    → Fase 3
+  proxyUrl: "",              // URL de tu Cloudflare Worker / Function    → Fase 3
   googleClientId: ""         // OAuth Client ID para conectores           → Fase 5
 };
 
@@ -241,6 +272,33 @@ const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); setTimeout(() => e.classList.remove('on'), 2200) };
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+/* ---------- Iconos y logo propios (dibujados a mano en SVG) ---------- */
+const IC = {
+  globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/>',
+  brain: '<path d="M12 5.2a3 3 0 0 0-5.6 1.4A3.2 3.2 0 0 0 5 12.4a3.2 3.2 0 0 0 1.6 5A3 3 0 0 0 12 18.8z"/><path d="M12 5.2a3 3 0 0 1 5.6 1.4 3.2 3.2 0 0 1 1.4 5.8 3.2 3.2 0 0 1-1.6 5 3 3 0 0 1-5.4 1.4"/><path d="M9 10.5h1.6M14.4 13.5H16"/>',
+  pin: '<path d="M9 4h6l-.8 5.2L17 12.5H7l2.8-3.3z"/><path d="M12 12.5V20"/>',
+  pencil: '<path d="M4.5 19.5l.9-4L16 4.9a1.8 1.8 0 0 1 2.6 0l.5.5a1.8 1.8 0 0 1 0 2.6L8.5 18.6z"/><path d="M14 7l3 3"/>',
+  trash: '<path d="M5 7h14M9.5 7V5h5v2M7 7l.8 12h8.4L17 7M10.5 11v5M13.5 11v5"/>',
+  sliders: '<path d="M4 7h8M17 7h3M4 12h3M12 12h8M4 17h10M19 17h1"/><circle cx="14.5" cy="7" r="2"/><circle cx="9.5" cy="12" r="2"/><circle cx="16.5" cy="17" r="2"/>',
+  logout: '<path d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H10M15 8l4 4-4 4M19 12H9.5"/>',
+  image: '<rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l4.2-4 3 2.8 3-3L19 17"/>',
+  send: '<path d="M12 19V6M6.5 11.5L12 6l5.5 5.5"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
+  close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  folder: '<path d="M3.5 8a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>',
+  doc: '<path d="M7 3.5h7l4.5 4.5v12.5H7z"/><path d="M14 3.5V8h4.5M10 13h5.5M10 16.5h5.5"/>',
+  sheet: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16M4 15h16M10 4v16"/>',
+  photo: '<path d="M12 12c0-3.5 1-6 3-7 1.5 2 1.5 4.5 0 7zM12 12c3.5 0 6-1 7-3-2-1.5-4.5-1.5-7 0zM12 12c0 3.5-1 6-3 7-1.5-2-1.5-4.5 0-7zM12 12c-3.5 0-6 1-7 3 2 1.5 4.5 1.5 7 0z"/>'
+};
+const ic = (n, z = 18) => `<svg class="ic" viewBox="0 0 24 24" width="${z}" height="${z}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+const logo = (z = 30) => `<svg viewBox="0 0 32 32" width="${z}" height="${z}" aria-hidden="true"><rect width="32" height="32" rx="10" style="fill:var(--navy2)"/><path d="M9 23.5C9.3 18 9 13.5 9.6 9.2 13.2 13.4 17.4 19.2 22.4 23.4 22.6 18.4 22.3 13.6 23 8.8" style="fill:none;stroke:var(--a2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round"/></svg>`;
+function hydrate(r = document) {
+  r.querySelectorAll('[data-ic]').forEach(e => { e.outerHTML = ic(e.dataset.ic, +e.dataset.s || 18) });
+  r.querySelectorAll('[data-logo]').forEach(e => { e.outerHTML = logo(+e.dataset.logo) });
+}
+const PALS = [['oceano', 'Océano', '#12286B', '#22D3EE'], ['aurora', 'Aurora', '#4B2A93', '#F472B6'], ['bosque', 'Bosque', '#13524B', '#C4E86B'], ['atardecer', 'Atardecer', '#7A2748', '#FFC857'], ['grafito', 'Grafito', '#2A2F3A', '#E2C275']];
+
 /* ---------- Estado ---------- */
 let user = LS.get('nx_session', null);
 let S = { chats: [], cur: null, profile: { about: '', style: '' }, memory: [], conn: {}, settings: { theme: 'light' } };
@@ -249,7 +307,7 @@ let think = false, search = true, busy = false, authMode = 'login';
 const key = () => 'nx_data_' + (user?.email || 'x');
 const save = () => Cloud.on ? Cloud.save() : LS.set(key(), S);
 function load() { S = Object.assign(S, LS.get(key(), {})); applyTheme() }
-function applyTheme() { document.documentElement.dataset.theme = S.settings.theme }
+function applyTheme() { document.documentElement.dataset.theme = S.settings.theme; document.documentElement.dataset.pal = S.settings.pal || 'oceano' }
 
 /* ---------- Nube (Firebase) · Fase 2 ----------
    Solo se activa si CONFIG.firebase tiene datos. Estructura en Firestore:
@@ -295,14 +353,14 @@ const Cloud = {
   },
   err(e) {
     const m = {
-      'auth/invalid-credential': 'Correo o contraseña incorrectos.', 'auth/wrong-password': 'Correo o contraseña incorrectos.', 'auth/user-not-found': 'Correo o contraseña incorrectos.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos. Si creaste la cuenta con Google, usa «Continuar con Google».', 'auth/wrong-password': 'Contraseña incorrecta.', 'auth/user-not-found': 'No existe una cuenta con ese correo. Crea una nueva.',
       'auth/email-already-in-use': 'Ese correo ya tiene cuenta. Inicia sesión.', 'auth/weak-password': 'La contraseña necesita al menos 6 caracteres.',
       'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.', 'auth/popup-closed-by-user': 'Cerraste la ventana de Google antes de terminar.',
       'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication → Configuración → Dominios autorizados).',
       'auth/operation-not-allowed': 'Ese método de acceso no está activado en Firebase (Authentication → Método de acceso).',
       'auth/network-request-failed': 'Sin conexión. Revisa tu internet.'
     };
-    return m[e.code] || e.message;
+    return m[e.code] || (e.message + (e.code ? ' [' + e.code + ']' : ''));
   },
   async google() {
     if (!this.on) return toast('Conectando con Firebase… inténtalo en unos segundos.');
@@ -310,13 +368,36 @@ const Cloud = {
   },
   async email(mode, email, pass, name) {
     if (!this.on) return toast('Conectando con Firebase… inténtalo en unos segundos.');
+    const A = this.Au, au = this.auth, say = m => $('#aErr').textContent = m;
+    const methods = async () => { try { return await A.fetchSignInMethodsForEmail(au, email) } catch { return [] } };
     try {
       if (mode === 'register') {
-        const r = await this.Au.createUserWithEmailAndPassword(this.auth, email, pass);
-        if (name) { await this.Au.updateProfile(r.user, { displayName: name }); if (user) { user.name = name; $('#nm').textContent = name; $('#av').textContent = name[0].toUpperCase() } }
-      } else await this.Au.signInWithEmailAndPassword(this.auth, email, pass);
-      $('#aErr').textContent = '';
-    } catch (e) { $('#aErr').textContent = this.err(e) }
+        const m = await methods();
+        if (m.includes('password')) { setAuth('login'); return say('Ese correo ya tiene cuenta. Inicia sesión con tu contraseña.') }
+        if (m.includes('google.com')) return say('Ese correo ya está registrado con Google. Usa "Continuar con Google".');
+        const r = await A.createUserWithEmailAndPassword(au, email, pass);
+        if (name) { await A.updateProfile(r.user, { displayName: name }); if (user) { user.name = name; $('#nm').textContent = name; $('#av').textContent = name[0].toUpperCase() } }
+      } else {
+        try { await A.signInWithEmailAndPassword(au, email, pass) }
+        catch (e) {
+          if (['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found'].includes(e.code)) {
+            const m = await methods();
+            if (m.includes('google.com') && !m.includes('password')) return say('Esa cuenta se creó con Google. Entra con "Continuar con Google" o usa "¿Olvidaste tu contraseña?" para ponerle una.');
+          }
+          throw e;
+        }
+      }
+      say('');
+    } catch (e) {
+      if (e.code === 'auth/email-already-in-use') { setAuth('login'); say('Ese correo ya tiene cuenta. Inicia sesión con tu contraseña.') }
+      else say(this.err(e));
+    }
+  },
+  async reset(email) {
+    if (!this.on) return;
+    if (!/^\S+@\S+\.\S+$/.test(email)) return $('#aErr').textContent = 'Escribe tu correo arriba y vuelve a pulsar.';
+    try { await this.Au.sendPasswordResetEmail(this.auth, email); toast('Te hemos enviado un correo para cambiar la contraseña. Mira también el spam.') }
+    catch (e) { $('#aErr').textContent = this.err(e) }
   },
   async out() { await this.flush(); await this.Au.signOut(this.auth) },
   async del() {
@@ -340,10 +421,12 @@ function setAuth(m) {
   $('#authS').textContent = reg ? 'Guarda tus chats y tu memoria en cualquier dispositivo.' : 'Entra para recuperar tus chats y tu memoria.';
   $('#nameF').classList.toggle('hidden', !reg);
   $('#aGo').textContent = reg ? 'Crear cuenta' : 'Entrar';
+  $('#aForgot').classList.toggle('hidden', reg);
   $('#aSwap').textContent = reg ? 'Ya tengo cuenta · Iniciar sesión' : '¿No tienes cuenta? Regístrate';
   $('#demoNote').classList.toggle('hidden', !!CONFIG.firebase);
 }
 $('#aSwap').onclick = e => { e.preventDefault(); setAuth(authMode === 'login' ? 'register' : 'login') };
+$('#aForgot').onclick = e => { e.preventDefault(); if (CONFIG.firebase) Cloud.reset($('#aMail').value.trim()); else toast('En modo demo no hay recuperación de contraseña.') };
 
 /* ---------- Autenticación ----------
    Fase 2: aquí se sustituirá el modo demo por Firebase Auth
@@ -405,13 +488,13 @@ function renderList() {
   const arr = S.chats.filter(c => !f || c.title.toLowerCase().includes(f) || c.msgs.some(m => m.text.toLowerCase().includes(f)))
     .sort((a, b) => b.pinned - a.pinned || b.ts - a.ts);
   $('#list').innerHTML = arr.length ? arr.map(c => `<div class="ci ${c.id === S.cur ? 'on' : ''}" data-id="${c.id}">
-    <span class="t">${c.pinned ? '📌 ' : ''}${esc(c.title)}</span>
-    <span class="ac"><button data-a="pin" title="Fijar">📌</button><button data-a="ren" title="Renombrar">✎</button><button data-a="del" title="Eliminar">🗑</button></span></div>`).join('')
+    <span class="t">${c.pinned ? ic('pin', 13) + ' ' : ''}${esc(c.title)}</span>
+    <span class="ac"><button data-a="pin" title="Fijar">${ic('pin', 15)}</button><button data-a="ren" title="Renombrar">${ic('pencil', 15)}</button><button data-a="del" title="Eliminar">${ic('trash', 15)}</button></span></div>`).join('')
     : '<div class="lbl">Sin resultados</div>';
 }
 $('#list').onclick = e => {
   const row = e.target.closest('.ci'); if (!row) return;
-  const c = S.chats.find(x => x.id === row.dataset.id), a = e.target.dataset.a;
+  const c = S.chats.find(x => x.id === row.dataset.id), a = e.target.closest('[data-a]')?.dataset.a;
   if (a === 'pin') c.pinned = !c.pinned;
   else if (a === 'ren') { const n = prompt('Nuevo nombre del chat', c.title); if (n?.trim()) c.title = n.trim().slice(0, 60) }
   else if (a === 'del') { if (!confirm('¿Eliminar este chat? No se puede deshacer.')) return; S.chats = S.chats.filter(x => x !== c); if (S.cur === c.id) S.cur = S.chats[0]?.id }
@@ -438,23 +521,26 @@ function md(t) {
 function msgHTML(m) {
   if (m.role === 'user') {
     const im = (IMGS[m.id] || []).filter(d => d.startsWith('data:image/')).map(d => `<img src="${d}" alt="Imagen adjunta">`).join('');
-    const nota = !im && m.n ? `<div style="opacity:.8;font-size:13px">🖼 ${m.n} imagen(es) adjunta(s) · no se guardan al recargar</div>` : '';
+    const nota = !im && m.n ? `<div style="opacity:.8;font-size:13px;display:flex;gap:6px;align-items:center">${ic('image', 14)} ${m.n} imagen(es) adjunta(s) · no se guardan al recargar</div>` : '';
     return `<div class="m u"><div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
   }
   const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
   // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
   const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
   const ent = m.entry ? `<iframe class="sx" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${esc(m.entry)}" title="Sugerencias de búsqueda de Google"></iframe>` : '';
-  return `<div class="m a"><div class="bub">${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}</div></div>`;
+  return `<div class="m a"><span class="av2">${logo(26)}</span><div class="bub">${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}</div></div>`;
 }
 function renderMsgs() {
   const c = chat(), w = $('#wrap');
   $('#title').textContent = c?.title || 'Nuevo chat';
   if (!c || !c.msgs.length) {
     const n = (user?.name || '').split(' ')[0];
-    w.innerHTML = `<div class="empty"><svg width="54" height="54" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0A1A3F"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <h2>Hola${n ? ', ' + esc(n) : ''}. ¿Qué investigamos?</h2><p>Pregunta, pide que busque algo o sube un archivo.</p>
-    <div class="sug">${sugFor(c?.id || 'x').map(s => `<button>${esc(s)}</button>`).join('')}</div></div>`;
+    const id = c?.id || 'x', hr = new Date().getHours();
+    const sal = hr < 6 ? 'Buenas noches' : hr < 14 ? 'Buenos días' : hr < 21 ? 'Buenas tardes' : 'Buenas noches';
+    const sub = sugCache[id + 's'] ||= pick(['¿En qué te echo una mano?', 'Cuéntame, que tengo tiempo.', '¿Qué se te ha ocurrido hoy?', 'Empezamos por donde quieras.', 'Dime qué tienes entre manos.']);
+    w.innerHTML = `<div class="empty"><div class="blob"></div>${logo(46)}<p class="kick">${sal}${n ? ', ' + esc(n) : ''}</p><h2>${sub}</h2>
+    <p class="lead">Busco en la web, te enseño de dónde saco cada dato y me acuerdo de lo que me cuentas.</p>
+    <div class="sug">${sugFor(id).map(t => `<button>${esc(t)}</button>`).join('')}</div></div>`;
     w.querySelectorAll('.sug button').forEach(b => b.onclick = () => { $('#inp').value = b.textContent; sendMsg() });
     return;
   }
@@ -479,7 +565,7 @@ function systemPrompt() {
 let pending = [];
 const IMGS = {};
 function drawThumbs() {
-  $('#thumbs').innerHTML = pending.map(x => `<div class="pv"><img src="${x.data}" alt="Imagen adjunta"><button data-r="${x.id}" aria-label="Quitar imagen">×</button></div>`).join('');
+  $('#thumbs').innerHTML = pending.map(x => `<div class="pv"><img src="${x.data}" alt="Imagen adjunta"><button data-r="${x.id}" aria-label="Quitar imagen">${ic('close', 12)}</button></div>`).join('');
 }
 async function addImage(file) {
   if (!file || !/^image\//.test(file.type)) return toast('Por ahora solo se pueden adjuntar imágenes.');
@@ -491,7 +577,7 @@ async function addImage(file) {
     pending.push({ id: uid(), data: cv.toDataURL('image/jpeg', .85) }); drawThumbs();
   } catch { toast('No pude leer esa imagen.') }
 }
-$('#thumbs').onclick = e => { const r = e.target.dataset.r; if (r) { pending = pending.filter(x => x.id !== r); drawThumbs() } };
+$('#thumbs').onclick = e => { const r = e.target.closest('[data-r]')?.dataset.r; if (r) { pending = pending.filter(x => x.id !== r); drawThumbs() } };
 $('#inp').addEventListener('paste', e => {
   const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
   if (fs.length) { e.preventDefault(); fs.forEach(addImage) }   // si no hay imagen, el pegado de texto es normal
@@ -504,7 +590,7 @@ async function askAI(c, onTick) {
   if (!CONFIG.proxyUrl) {   // Sin proxy: respuesta de demostración
     await new Promise(r => setTimeout(r, 900));
     return {
-      text: ((IMGS[c.msgs[c.msgs.length - 1].id] || []).length ? '🖼 He recibido tu imagen, pero en modo demo no puedo verla todavía.\n\n' : '') +
+      text: ((IMGS[c.msgs[c.msgs.length - 1].id] || []).length ? 'He recibido tu imagen, pero en modo demo no puedo verla todavía.\n\n' : '') +
         'Estoy en **modo demo**: la interfaz funciona, pero aún no hay un modelo conectado.\n\nPega la URL de tu proxy en `CONFIG.proxyUrl` para activarme.',
       reasoning: '', sources: []
     };
@@ -516,11 +602,12 @@ async function askAI(c, onTick) {
     body: JSON.stringify({ system: systemPrompt(), messages: c.msgs.map(m => ({ role: m.role, content: m.text, images: IMGS[m.id] || [] })), think, search })
   });
   if (!r.ok) {
-    const e = { 401: 'Tu sesión no es válida. Cierra sesión y vuelve a entrar.', 403: 'El proxy rechazó la petición (revisa ALLOWED_ORIGIN).', 429: 'Se alcanzó el límite gratuito de Gemini. Espera un poco o desactiva "Pensar a fondo".' }[r.status];
-    throw new Error(e || 'El servidor respondió ' + r.status);
+    const raw = await r.text().catch(() => ''); let det = ''; try { det = JSON.parse(raw).error?.message || '' } catch { det = raw }
+    const e = { 401: 'Tu sesión no es válida. Cierra sesión y vuelve a entrar.', 403: 'El proxy rechazó la petición (revisa ALLOWED_ORIGIN).', 429: 'Gemini dice que se alcanzó el límite.' }[r.status];
+    throw new Error((e || 'Gemini respondió ' + r.status + '.') + (det ? ' Detalle: ' + det.slice(0, 240) : ''));
   }
   // Lee el flujo SSE de Gemini: cada "data:" trae un trozo de texto, de razonamiento o metadatos de búsqueda
-  const out = { text: '', reasoning: '', sources: [], entry: '' };
+  const out = { text: r.headers.get('X-Nexora-Search') === 'off' ? '*(La búsqueda web no estaba disponible ahora, así que respondo sin ella.)*\n\n' : '', reasoning: '', sources: [], entry: '' };
   const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
   try {
     for (;;) {
@@ -553,7 +640,7 @@ async function sendMsg() {
   pending = []; drawThumbs();
   if (c.msgs.length === 1) c.title = t === '(imagen)' ? 'Imagen' : t.slice(0, 40);
   $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
-  $('#wrap').insertAdjacentHTML('beforeend', '<div id="typing"><div class="m a"><div class="bub dots"><span></span><span></span><span></span></div></div></div>');
+  $('#wrap').insertAdjacentHTML('beforeend', '<div id="typing"><div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div></div>');
   $('#msgs').scrollTop = 1e9;
   let raf = 0;
   const tick = o => { if (raf) return; raf = requestAnimationFrame(() => {
@@ -579,10 +666,10 @@ $('#menu').onclick = () => $('#side').classList.toggle('open');
 
 /* ---------- Panel de perfil, memoria, conectores y ajustes ---------- */
 const CONNECTORS = [
-  ['drive', '📁', 'Google Drive', 'Leer archivos que elijas', 'drive.file'],
-  ['docs', '📄', 'Google Docs', 'Leer documentos seleccionados', 'documents.readonly'],
-  ['sheets', '📊', 'Google Sheets', 'Leer hojas de cálculo seleccionadas', 'spreadsheets.readonly'],
-  ['photos', '🖼', 'Google Fotos', 'Elegir fotos con el selector oficial', 'photospicker.mediaitems.readonly']
+  ['drive', 'folder', 'Google Drive', 'Leer archivos que elijas', 'drive.file'],
+  ['docs', 'doc', 'Google Docs', 'Leer documentos seleccionados', 'documents.readonly'],
+  ['sheets', 'sheet', 'Google Sheets', 'Leer hojas de cálculo seleccionadas', 'spreadsheets.readonly'],
+  ['photos', 'photo', 'Google Fotos', 'Elegir fotos con el selector oficial', 'photospicker.mediaitems.readonly']
 ];
 function tab(t) {
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
@@ -606,12 +693,14 @@ function tab(t) {
   }
   if (t === 'c') {
     mb.innerHTML = `<p class="note">Nexora pedirá solo los permisos mínimos y leerá únicamente los archivos que elijas. La conexión real se activa en la Fase 5 (requiere un Client ID de Google Cloud).</p>` +
-      CONNECTORS.map(([k, i, n, d, sc]) => `<div class="con"><i>${i}</i><div><b>${n}</b><small>${d}</small></div><button class="btn ${S.conn[k] ? 'ghost' : 'pri'}" data-k="${k}">${S.conn[k] ? 'Desconectar' : 'Conectar'}</button></div>`).join('');
+      CONNECTORS.map(([k, i, n, d, sc]) => `<div class="con"><i>${ic(i, 26)}</i><div><b>${n}</b><small>${d}</small></div><button class="btn ${S.conn[k] ? 'ghost' : 'pri'}" data-k="${k}">${S.conn[k] ? 'Desconectar' : 'Conectar'}</button></div>`).join('');
     mb.onclick = e => { const k = e.target.dataset.k; if (!k) return; S.conn[k] = !S.conn[k]; save(); tab('c'); toast(S.conn[k] ? 'Marcado como conectado (demo)' : 'Desconectado') };
   }
   if (t === 's') {
     mb.innerHTML = `<label class="field">Tema<select id="sT"><option value="light">Claro</option><option value="dark">Oscuro</option></select></label>
+    <div class="field">Paleta de colores<div class="pals">${PALS.map(q => `<button class="pal ${(S.settings.pal || 'oceano') === q[0] ? 'on' : ''}" data-p="${q[0]}" title="${q[1]}" aria-label="${q[1]}" style="background:linear-gradient(135deg,${q[2]},${q[3]})"></button>`).join('')}</div></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><button class="btn ghost" id="sX">Exportar mis datos</button><button class="btn ghost" id="sD" style="color:#D93651">Eliminar mi cuenta y datos</button></div>`;
+    $('.pals').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return; S.settings.pal = b.dataset.p; save(); applyTheme(); tab('s') };
     $('#sT').value = S.settings.theme; $('#sT').onchange = e => { S.settings.theme = e.target.value; save(); applyTheme() };
     $('#sX').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); a.download = 'nexora-datos.json'; a.click() };
     $('#sD').onclick = () => {
@@ -630,9 +719,12 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#ov').cla
 /* ---------- Arranque ---------- */
 function initApp() {
   $('#nm').textContent = user.name; $('#av').textContent = (user.name[0] || 'U').toUpperCase();
-  if (!S.chats.length) newChat(); else { if (!S.chats.some(x => x.id === S.cur)) S.cur = S.chats[0].id; pruneEmpty(); save(); renderAll() }
+  const vacio = S.chats.find(x => !x.msgs.length);
+  if (vacio) { S.cur = vacio.id; pruneEmpty(); save(); renderAll() } else newChat();
+  $('#inp').placeholder = pick(['Escribe aquí lo que quieras…', 'Pregúntame algo, sin miedo', 'Pega una captura si te ayuda', 'Cuéntame qué necesitas']);
   show('app');
 }
+hydrate();
 setAuth('login');
 if (CONFIG.firebase) { show(''); Cloud.init().catch(e => { show('welcome'); toast('No se pudo conectar con Firebase: ' + e.message) }) }
 else if (user) { load(); initApp() }
