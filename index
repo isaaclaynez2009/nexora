@@ -1,1 +1,449 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexora</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230A1A3F'/><path d='M9 23V9l14 14V9' stroke='%2322D3EE' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens de diseño ===== */
+:root{--navy:#0A1A3F;--navy2:#12286B;--navy3:#1B3A8C;--cyan:#22D3EE;--bg:#F6F8FC;--card:#fff;--ink:#0A1A3F;--mut:#5B6785;--line:#E2E8F3;--side:#0A1A3F;--sideink:#DCE6FF;--r:16px}
+:root[data-theme=dark]{--bg:#070F26;--card:#0E1B40;--ink:#EAF0FF;--mut:#9AA8CC;--line:#1E2F63;--side:#050C1E}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:Manrope,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.hidden{display:none!important}
+.btn{padding:11px 20px;border-radius:12px;font-weight:600;transition:transform .15s,background .15s}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:linear-gradient(135deg,var(--navy3),var(--navy));color:#fff;box-shadow:0 6px 20px #12286b55}
+.btn.ghost{border:1px solid var(--line);background:var(--card)}
+.btn.light{background:#fff;color:var(--navy)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:.2px}
+
+/* ===== Bienvenida ===== */
+#welcome{min-height:100%;background:radial-gradient(900px 500px at 80% -10%,#2B5BE0 0%,transparent 60%),radial-gradient(700px 500px at 0% 100%,#0e7490 0%,transparent 55%),var(--navy);color:#fff;display:flex;flex-direction:column;padding:28px clamp(20px,6vw,80px)}
+#welcome header{display:flex;justify-content:space-between;align-items:center}
+.hero{margin:auto 0;max-width:760px;padding:60px 0}
+.hero h1{font-size:clamp(38px,7vw,72px);line-height:1.04;font-weight:800;letter-spacing:-1.5px}
+.hero p{margin:20px 0 32px;font-size:18px;color:#C7D6FF;max-width:560px}
+.hero .row{display:flex;gap:12px;flex-wrap:wrap}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:8px}
+.feats div{padding:16px;border-radius:var(--r);background:#ffffff12;border:1px solid #ffffff22;backdrop-filter:blur(8px);font-size:14px;color:#DCE6FF}
+.feats b{display:block;color:#fff;margin-bottom:2px}
+
+/* ===== Acceso ===== */
+#auth{min-height:100%;display:grid;place-items:center;padding:20px;background:var(--navy)}
+.panel{width:min(420px,100%);background:var(--card);border-radius:24px;padding:32px;box-shadow:0 30px 80px #0008}
+.panel h2{margin:18px 0 4px;font-size:24px}
+.panel p.s{color:var(--mut);margin-bottom:18px;font-size:14px}
+.field{display:block;margin-bottom:12px;font-size:13px;font-weight:600;color:var(--mut)}
+.field input,.field textarea,.field select{display:block;width:100%;margin-top:5px;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-weight:400}
+.gbtn{width:100%;display:flex;gap:10px;justify-content:center;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;font-weight:600;margin-bottom:14px;background:var(--card)}
+.or{text-align:center;color:var(--mut);font-size:12px;margin:6px 0 12px}
+.err{color:#D93651;font-size:13px;min-height:18px;margin-bottom:6px}
+
+/* ===== App ===== */
+#app{height:100%;display:grid;grid-template-columns:292px 1fr}
+aside{background:var(--side);color:var(--sideink);display:flex;flex-direction:column;padding:16px;gap:12px;min-height:0}
+aside .logo{color:#fff;padding:4px 6px}
+#newChat{background:linear-gradient(135deg,#2B5BE0,#22D3EE);color:#04122e;font-weight:800;padding:12px;border-radius:12px}
+#q{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #ffffff22;background:#ffffff0f;color:#fff}
+#q::placeholder{color:#8fa3d6}
+#list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.ci{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:14px}
+.ci:hover,.ci.on{background:#ffffff1a}
+.ci span.t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci .ac{display:none;gap:2px}
+.ci:hover .ac,.ci.on .ac{display:flex}
+.ac button{color:#9fb4ee;padding:2px 5px;border-radius:6px;font-size:13px}
+.ac button:hover{background:#ffffff22;color:#fff}
+.lbl{font-size:12px;color:#8fa3d6;padding:8px 10px 2px}
+.me{display:flex;gap:8px;align-items:center;padding-top:10px;border-top:1px solid #ffffff1c}
+.me .av{width:34px;height:34px;border-radius:50%;background:var(--cyan);color:var(--navy);display:grid;place-items:center;font-weight:800}
+.me .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.me button{color:#cfdcff;padding:6px 9px;border-radius:8px}
+.me button:hover{background:#ffffff1a}
+
+main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+.top h3{flex:1;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#menu{display:none;font-size:20px}
+#msgs{flex:1;overflow:auto;padding:24px clamp(14px,4vw,40px)}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.empty{text-align:center;margin-top:12vh}
+.empty h2{font-size:30px;margin:14px 0 6px}
+.empty p{color:var(--mut)}
+.sug{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.sug button{padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:14px}
+.sug button:hover{border-color:var(--navy3)}
+.m{display:flex;gap:12px}
+.m.u{justify-content:flex-end}
+.bub{max-width:88%;padding:12px 16px;border-radius:18px;overflow-wrap:anywhere}
+.u .bub{background:linear-gradient(135deg,var(--navy3),var(--navy));color:#fff;border-bottom-right-radius:5px}
+.a .bub{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:5px}
+.bub pre{background:#0A1A3F;color:#DCE6FF;padding:12px;border-radius:12px;overflow:auto;margin:8px 0;position:relative;font-size:13px}
+.bub code{font-family:ui-monospace,Menlo,monospace;background:#12286b1a;padding:1px 5px;border-radius:5px;font-size:.9em}
+.bub pre code{background:none;padding:0}
+.cp{position:absolute;top:6px;right:6px;font-size:12px;color:#9fb4ee;background:#ffffff15;padding:3px 8px;border-radius:6px}
+.bub p+p,.bub ul{margin-top:8px}.bub ul{padding-left:20px}
+details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px solid var(--cyan);padding-left:10px}
+.src{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.src a{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--navy3);text-decoration:none}
+:root[data-theme=dark] .src a{color:var(--cyan)}
+.dots span{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:var(--navy3);animation:b 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{transform:translateY(-5px);opacity:.4}}
+.comp{padding:14px clamp(14px,4vw,40px) 20px}
+.box{max-width:780px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:10px 12px;box-shadow:0 10px 30px #0a1a3f14}
+.box textarea{width:100%;border:0;background:none;resize:none;outline:0;max-height:180px;padding:6px 4px}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--mut)}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+:root[data-theme=dark] .chip.on{background:var(--cyan);color:var(--navy);border-color:var(--cyan)}
+#send{margin-left:auto;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2B5BE0,#22D3EE);color:#04122e;font-weight:800;font-size:18px}
+#send:disabled{opacity:.4}
+
+/* ===== Ajustes (modal) ===== */
+.ov{position:fixed;inset:0;background:#050c1eaa;display:grid;place-items:center;padding:16px;z-index:20}
+.modal{width:min(680px,100%);max-height:90vh;background:var(--card);border-radius:22px;display:flex;flex-direction:column;overflow:hidden}
+.mh{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);font-weight:800}
+.mh button{margin-left:auto;font-size:20px;color:var(--mut)}
+.tabs{display:flex;gap:4px;padding:10px 16px 0;overflow:auto}
+.tabs button{padding:8px 14px;border-radius:10px 10px 0 0;color:var(--mut);font-weight:600;white-space:nowrap}
+.tabs button.on{color:var(--ink);box-shadow:inset 0 -3px var(--cyan)}
+.mb{padding:20px;overflow:auto}
+.row2{display:flex;gap:8px;margin-bottom:10px}.row2 input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.mem{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+.mem span{flex:1}
+.con{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
+.con i{font-style:normal;font-size:24px}
+.con div{flex:1}.con small{color:var(--mut);display:block}
+.note{font-size:13px;color:var(--mut);background:var(--bg);padding:10px 12px;border-radius:10px;margin-bottom:12px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:12px;z-index:30;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.on{opacity:1}
+
+@media(max-width:800px){
+ #app{grid-template-columns:1fr}
+ aside{position:fixed;inset:0 25% 0 0;z-index:10;transform:translateX(-100%);transition:transform .25s}
+ aside.open{transform:none}
+ #menu{display:block}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== BIENVENIDA ===== -->
+<section id="welcome">
+  <header>
+    <div class="logo"><svg id="lg1" width="34" height="34" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#12286B"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Nexora</div>
+    <button class="btn light" data-go="login">Iniciar sesión</button>
+  </header>
+  <div class="hero">
+    <h1>Pregunta lo que quieras. Nexora lo investiga contigo.</h1>
+    <p>Un asistente que busca en la web, cita sus fuentes, recuerda lo que le cuentas y trabaja con tus documentos de Google.</p>
+    <div class="row">
+      <button class="btn pri" style="background:linear-gradient(135deg,#2B5BE0,#22D3EE);color:#04122e" data-go="register">Crear cuenta gratis</button>
+      <button class="btn light" data-go="login">Ya tengo cuenta</button>
+    </div>
+  </div>
+  <div class="feats">
+    <div><b>Búsqueda con fuentes</b>Cada dato con enlace verificable.</div>
+    <div><b>Pensar a fondo</b>Razonamiento visible y colapsable.</div>
+    <div><b>Memoria</b>Tú decides qué recuerda y qué olvida.</div>
+    <div><b>Conectores de Google</b>Drive, Docs, Sheets y Fotos.</div>
+  </div>
+</section>
+
+<!-- ===== ACCESO ===== -->
+<section id="auth" class="hidden">
+  <div class="panel">
+    <div class="logo"><svg width="30" height="30" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0A1A3F"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Nexora</div>
+    <h2 id="authT">Iniciar sesión</h2>
+    <p class="s" id="authS">Entra para recuperar tus chats y tu memoria.</p>
+    <button class="gbtn" id="gLogin"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continuar con Google</button>
+    <div class="or">o con tu correo</div>
+    <label class="field hidden" id="nameF">Nombre<input id="aName" autocomplete="name"></label>
+    <label class="field">Correo<input id="aMail" type="email" autocomplete="email"></label>
+    <label class="field">Contraseña<input id="aPass" type="password" autocomplete="current-password"></label>
+    <div class="err" id="aErr"></div>
+    <button class="btn pri" style="width:100%" id="aGo">Entrar</button>
+    <p class="s" style="text-align:center;margin:14px 0 0"><a href="#" id="aSwap" style="color:var(--navy3)">¿No tienes cuenta? Regístrate</a></p>
+    <p class="note" id="demoNote" style="margin:14px 0 0">Modo demo: Firebase aún no está configurado, así que tu cuenta y tus chats se guardan solo en este navegador.</p>
+  </div>
+</section>
+
+<!-- ===== APP ===== -->
+<div id="app" class="hidden">
+  <aside id="side">
+    <div class="logo"><svg width="30" height="30" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#12286B"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Nexora</div>
+    <button id="newChat">+ Nuevo chat</button>
+    <input id="q" placeholder="Buscar en tus chats" aria-label="Buscar chats">
+    <div id="list"></div>
+    <div class="me"><div class="av" id="av">U</div><div class="nm" id="nm">Usuario</div>
+      <button id="openSet" title="Perfil y ajustes">⚙</button><button id="out" title="Cerrar sesión">⎋</button></div>
+  </aside>
+  <main>
+    <div class="top"><button id="menu" aria-label="Menú">☰</button><h3 id="title">Nuevo chat</h3></div>
+    <div id="msgs"><div class="wrap" id="wrap"></div></div>
+    <div class="comp"><div class="box">
+      <textarea id="inp" rows="1" placeholder="Escribe tu mensaje a Nexora"></textarea>
+      <div class="tools">
+        <label class="chip" style="cursor:pointer">📎 Adjuntar<input type="file" id="file" hidden multiple></label>
+        <button class="chip on" id="tSearch">🌐 Buscar en la web</button>
+        <button class="chip" id="tThink">🧠 Pensar a fondo</button>
+        <button id="send" aria-label="Enviar">↑</button>
+      </div>
+    </div></div>
+  </main>
+</div>
+
+<!-- ===== AJUSTES ===== -->
+<div class="ov hidden" id="ov"><div class="modal" role="dialog" aria-modal="true">
+  <div class="mh">Perfil y ajustes<button id="cl" aria-label="Cerrar">×</button></div>
+  <div class="tabs" id="tabs"><button data-t="p" class="on">Perfil</button><button data-t="m">Memoria</button><button data-t="c">Conectores</button><button data-t="s">Ajustes</button></div>
+  <div class="mb" id="mb"></div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   NEXORA · Fase 1
+   CONFIG: rellena estos valores en las fases siguientes (ver guía).
+   Mientras estén vacíos, la app funciona en MODO DEMO (todo en localStorage).
+   ===================================================================== */
+const CONFIG = {
+  firebase: null,            // { apiKey, authDomain, projectId, appId }  → Fase 2
+  proxyUrl: "",              // URL de tu Cloudflare Worker / Function    → Fase 3
+  googleClientId: ""         // OAuth Client ID para conectores           → Fase 5
+};
+
+const $ = (s, r = document) => r.querySelector(s);
+const LS = {
+  get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); setTimeout(() => e.classList.remove('on'), 2200) };
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+/* ---------- Estado ---------- */
+let user = LS.get('nx_session', null);
+let S = { chats: [], cur: null, profile: { about: '', style: '' }, memory: [], conn: {}, settings: { theme: 'light' } };
+let think = false, search = true, busy = false, authMode = 'login';
+
+const key = () => 'nx_data_' + (user?.email || 'x');
+const save = () => LS.set(key(), S);
+function load() { S = Object.assign(S, LS.get(key(), {})); applyTheme() }
+function applyTheme() { document.documentElement.dataset.theme = S.settings.theme }
+
+/* ---------- Navegación entre pantallas ---------- */
+function show(id) { ['welcome', 'auth', 'app'].forEach(x => $('#' + x).classList.toggle('hidden', x !== id)) }
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { setAuth(b.dataset.go); show('auth') });
+function setAuth(m) {
+  authMode = m; const reg = m === 'register';
+  $('#authT').textContent = reg ? 'Crear cuenta' : 'Iniciar sesión';
+  $('#authS').textContent = reg ? 'Guarda tus chats y tu memoria en cualquier dispositivo.' : 'Entra para recuperar tus chats y tu memoria.';
+  $('#nameF').classList.toggle('hidden', !reg);
+  $('#aGo').textContent = reg ? 'Crear cuenta' : 'Entrar';
+  $('#aSwap').textContent = reg ? 'Ya tengo cuenta · Iniciar sesión' : '¿No tienes cuenta? Regístrate';
+  $('#demoNote').classList.toggle('hidden', !!CONFIG.firebase);
+}
+$('#aSwap').onclick = e => { e.preventDefault(); setAuth(authMode === 'login' ? 'register' : 'login') };
+
+/* ---------- Autenticación ----------
+   Fase 2: aquí se sustituirá el modo demo por Firebase Auth
+   (signInWithPopup con GoogleAuthProvider y email/contraseña). */
+function enter(u) { user = u; LS.set('nx_session', u); load(); initApp() }
+$('#aGo').onclick = () => {
+  const email = $('#aMail').value.trim().toLowerCase(), pass = $('#aPass').value, name = $('#aName').value.trim();
+  const err = m => $('#aErr').textContent = m;
+  if (!/^\S+@\S+\.\S+$/.test(email)) return err('Escribe un correo válido.');
+  if (pass.length < 6) return err('La contraseña necesita al menos 6 caracteres.');
+  const users = LS.get('nx_users', {});
+  if (authMode === 'register') {
+    if (users[email]) return err('Ese correo ya tiene cuenta. Inicia sesión.');
+    users[email] = { pass: btoa(pass), name: name || email.split('@')[0] }; LS.set('nx_users', users);
+  } else if (!users[email] || users[email].pass !== btoa(pass)) return err('Correo o contraseña incorrectos.');
+  err(''); enter({ email, name: users[email].name });
+};
+$('#gLogin').onclick = () => {
+  if (!CONFIG.firebase) { toast('Login con Google disponible al configurar Firebase (Fase 2). Entras como invitado.'); enter({ email: 'invitado@demo', name: 'Invitado' }) }
+};
+$('#out').onclick = () => { localStorage.removeItem('nx_session'); user = null; show('welcome') };
+
+/* ---------- Chats ---------- */
+const chat = () => S.chats.find(c => c.id === S.cur);
+function newChat() {
+  const c = { id: uid(), title: 'Nuevo chat', pinned: false, msgs: [], ts: Date.now() };
+  S.chats.unshift(c); S.cur = c.id; save(); renderAll(); $('#inp').focus();
+}
+function renderList() {
+  const f = $('#q').value.toLowerCase();
+  const arr = S.chats.filter(c => !f || c.title.toLowerCase().includes(f) || c.msgs.some(m => m.text.toLowerCase().includes(f)))
+    .sort((a, b) => b.pinned - a.pinned || b.ts - a.ts);
+  $('#list').innerHTML = arr.length ? arr.map(c => `<div class="ci ${c.id === S.cur ? 'on' : ''}" data-id="${c.id}">
+    <span class="t">${c.pinned ? '📌 ' : ''}${esc(c.title)}</span>
+    <span class="ac"><button data-a="pin" title="Fijar">📌</button><button data-a="ren" title="Renombrar">✎</button><button data-a="del" title="Eliminar">🗑</button></span></div>`).join('')
+    : '<div class="lbl">Sin resultados</div>';
+}
+$('#list').onclick = e => {
+  const row = e.target.closest('.ci'); if (!row) return;
+  const c = S.chats.find(x => x.id === row.dataset.id), a = e.target.dataset.a;
+  if (a === 'pin') c.pinned = !c.pinned;
+  else if (a === 'ren') { const n = prompt('Nuevo nombre del chat', c.title); if (n?.trim()) c.title = n.trim().slice(0, 60) }
+  else if (a === 'del') { if (!confirm('¿Eliminar este chat? No se puede deshacer.')) return; S.chats = S.chats.filter(x => x !== c); if (S.cur === c.id) S.cur = S.chats[0]?.id }
+  else { S.cur = c.id; $('#side').classList.remove('open') }
+  save(); if (!S.chats.length) return newChat(); renderAll();
+};
+$('#q').oninput = renderList;
+$('#newChat').onclick = () => { newChat(); $('#side').classList.remove('open') };
+
+/* ---------- Render de mensajes (Markdown mínimo y seguro) ---------- */
+function md(t) {
+  let h = esc(t);
+  h = h.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><button class="cp">Copiar</button><code>${c.trim()}</code></pre>`);
+  h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  h = h.replace(/(^|\n)- (.+)/g, '$1<li>$2</li>').replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+  return h.split(/\n{2,}/).map(p => /^<(pre|ul)/.test(p) ? p : `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+}
+function msgHTML(m) {
+  if (m.role === 'user') return `<div class="m u"><div class="bub">${esc(m.text).replace(/\n/g, '<br>')}</div></div>`;
+  const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
+  // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
+  const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
+  return `<div class="m a"><div class="bub">${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}</div></div>`;
+}
+function renderMsgs() {
+  const c = chat(), w = $('#wrap');
+  $('#title').textContent = c?.title || 'Nuevo chat';
+  if (!c || !c.msgs.length) {
+    const n = (user?.name || '').split(' ')[0];
+    w.innerHTML = `<div class="empty"><svg width="54" height="54" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0A1A3F"/><path d="M9 23V9l14 14V9" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h2>Hola${n ? ', ' + esc(n) : ''}. ¿Qué investigamos?</h2><p>Pregunta, pide que busque algo o sube un archivo.</p>
+    <div class="sug">${['Resume las últimas noticias sobre energía solar', 'Explícame la computación cuántica con un ejemplo', 'Ayúdame a planificar un viaje a Lisboa'].map(s => `<button>${s}</button>`).join('')}</div></div>`;
+    w.querySelectorAll('.sug button').forEach(b => b.onclick = () => { $('#inp').value = b.textContent; sendMsg() });
+    return;
+  }
+  w.innerHTML = c.msgs.map(msgHTML).join('');
+  $('#msgs').scrollTop = 1e9;
+}
+$('#wrap').onclick = e => { if (e.target.classList.contains('cp')) { navigator.clipboard.writeText(e.target.nextElementSibling.textContent); toast('Código copiado') } };
+const renderAll = () => { renderList(); renderMsgs() };
+
+/* ---------- Contexto para la IA: perfil + memoria ---------- */
+function systemPrompt() {
+  let s = `Eres Nexora, un asistente de IA honesto y preciso. Responde en el idioma del usuario. Cita fuentes fiables cuando busques en la web.`;
+  if (S.profile.about) s += `\nSobre el usuario: ${S.profile.about}`;
+  if (S.profile.style) s += `\nInstrucciones del usuario: ${S.profile.style}`;
+  if (S.memory.length) s += `\nRecuerdos:\n- ` + S.memory.join('\n- ');
+  return s;
+}
+
+/* ---------- Envío ---------- */
+async function askAI(c) {
+  // Fase 3: el proxy servirá en streaming. Por ahora espera JSON {text, reasoning, sources}.
+  if (!CONFIG.proxyUrl) {
+    await new Promise(r => setTimeout(r, 900));
+    return {
+      text: 'Estoy en **modo demo**: la interfaz funciona, pero aún no hay un modelo conectado.\n\nPara activarme en la Fase 3 necesito:\n- Un proxy serverless (Cloudflare Worker) con tu clave de la API de IA\n- Una API de búsqueda web (Tavily o Brave)\n\nTu perfil y tus recuerdos ya se envían como contexto en cada mensaje.',
+      reasoning: think ? 'Detecto que no hay `proxyUrl` configurado, así que respondo con una guía en lugar de inventar una respuesta.' : '',
+      sources: []
+    };
+  }
+  const r = await fetch(CONFIG.proxyUrl, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: systemPrompt(), messages: c.msgs.map(m => ({ role: m.role, content: m.text })), think, search })
+  });
+  if (!r.ok) throw new Error('El servidor respondió ' + r.status);
+  return r.json();
+}
+async function sendMsg() {
+  const t = $('#inp').value.trim(); if (!t || busy) return;
+  if (!chat()) newChat();
+  const c = chat(); busy = true; $('#send').disabled = true;
+  c.msgs.push({ role: 'user', text: t }); c.ts = Date.now();
+  if (c.msgs.length === 1) c.title = t.slice(0, 40);
+  $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
+  $('#wrap').insertAdjacentHTML('beforeend', '<div class="m a" id="typing"><div class="bub dots"><span></span><span></span><span></span></div></div>');
+  $('#msgs').scrollTop = 1e9;
+  try {
+    const r = await askAI(c);
+    c.msgs.push({ role: 'assistant', text: r.text || '(sin respuesta)', reasoning: r.reasoning, sources: r.sources });
+  } catch (e) {
+    c.msgs.push({ role: 'assistant', text: 'No pude responder: ' + e.message + '. Revisa la configuración del proxy e inténtalo de nuevo.' });
+  }
+  busy = false; $('#send').disabled = false; save(); renderAll();
+}
+$('#send').onclick = sendMsg;
+$('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } };
+$('#inp').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' };
+$('#tSearch').onclick = e => { search = !search; e.currentTarget.classList.toggle('on', search) };
+$('#tThink').onclick = e => { think = !think; e.currentTarget.classList.toggle('on', think) };
+$('#file').onchange = e => { if (e.target.files.length) toast(e.target.files.length + ' archivo(s) listos. El análisis llega en la Fase 3.') };
+$('#menu').onclick = () => $('#side').classList.toggle('open');
+
+/* ---------- Panel de perfil, memoria, conectores y ajustes ---------- */
+const CONNECTORS = [
+  ['drive', '📁', 'Google Drive', 'Leer archivos que elijas', 'drive.file'],
+  ['docs', '📄', 'Google Docs', 'Leer documentos seleccionados', 'documents.readonly'],
+  ['sheets', '📊', 'Google Sheets', 'Leer hojas de cálculo seleccionadas', 'spreadsheets.readonly'],
+  ['photos', '🖼', 'Google Fotos', 'Elegir fotos con el selector oficial', 'photospicker.mediaitems.readonly']
+];
+function tab(t) {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  const mb = $('#mb');
+  if (t === 'p') {
+    mb.innerHTML = `<label class="field">Sobre ti (nombre, profesión, intereses)<textarea id="pA" rows="4">${esc(S.profile.about)}</textarea></label>
+    <label class="field">Cómo quieres que responda (tono, idioma, nivel de detalle)<textarea id="pS" rows="4">${esc(S.profile.style)}</textarea></label>
+    <button class="btn pri" id="pSave">Guardar perfil</button>`;
+    $('#pSave').onclick = () => { S.profile = { about: $('#pA').value.trim(), style: $('#pS').value.trim() }; save(); toast('Perfil guardado') };
+  }
+  if (t === 'm') {
+    const draw = () => { $('#ml').innerHTML = S.memory.length ? S.memory.map((m, i) => `<div class="mem"><span>${esc(m)}</span><button class="btn ghost" data-e="${i}">Editar</button><button class="btn ghost" data-d="${i}">Borrar</button></div>`).join('') : '<p class="note">Nexora aún no recuerda nada. Añade datos que quieras que tenga en cuenta.</p>' };
+    mb.innerHTML = `<div class="row2"><input id="mi" placeholder="Ej.: Prefiero respuestas breves con ejemplos"><button class="btn pri" id="ma">Añadir</button></div><div id="ml"></div>`;
+    draw();
+    $('#ma').onclick = () => { const v = $('#mi').value.trim(); if (v) { S.memory.push(v.slice(0, 300)); save(); $('#mi').value = ''; draw() } };
+    $('#ml').onclick = e => {
+      if (e.target.dataset.d) S.memory.splice(+e.target.dataset.d, 1);
+      else if (e.target.dataset.e) { const i = +e.target.dataset.e, n = prompt('Editar recuerdo', S.memory[i]); if (n?.trim()) S.memory[i] = n.trim() }
+      else return; save(); draw();
+    };
+  }
+  if (t === 'c') {
+    mb.innerHTML = `<p class="note">Nexora pedirá solo los permisos mínimos y leerá únicamente los archivos que elijas. La conexión real se activa en la Fase 5 (requiere un Client ID de Google Cloud).</p>` +
+      CONNECTORS.map(([k, i, n, d, sc]) => `<div class="con"><i>${i}</i><div><b>${n}</b><small>${d}</small></div><button class="btn ${S.conn[k] ? 'ghost' : 'pri'}" data-k="${k}">${S.conn[k] ? 'Desconectar' : 'Conectar'}</button></div>`).join('');
+    mb.onclick = e => { const k = e.target.dataset.k; if (!k) return; S.conn[k] = !S.conn[k]; save(); tab('c'); toast(S.conn[k] ? 'Marcado como conectado (demo)' : 'Desconectado') };
+  }
+  if (t === 's') {
+    mb.innerHTML = `<label class="field">Tema<select id="sT"><option value="light">Claro</option><option value="dark">Oscuro</option></select></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><button class="btn ghost" id="sX">Exportar mis datos</button><button class="btn ghost" id="sD" style="color:#D93651">Eliminar mi cuenta y datos</button></div>`;
+    $('#sT').value = S.settings.theme; $('#sT').onchange = e => { S.settings.theme = e.target.value; save(); applyTheme() };
+    $('#sX').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); a.download = 'nexora-datos.json'; a.click() };
+    $('#sD').onclick = () => {
+      if (!confirm('Se borrarán tu cuenta, chats y memoria de este navegador. ¿Continuar?')) return;
+      const u = LS.get('nx_users', {}); delete u[user.email]; LS.set('nx_users', u); localStorage.removeItem(key()); $('#out').click(); $('#ov').classList.add('hidden');
+    };
+  }
+}
+$('#tabs').onclick = e => e.target.dataset.t && tab(e.target.dataset.t);
+$('#openSet').onclick = () => { $('#ov').classList.remove('hidden'); tab('p') };
+$('#cl').onclick = () => $('#ov').classList.add('hidden');
+$('#ov').onclick = e => e.target.id === 'ov' && $('#ov').classList.add('hidden');
+document.onkeydown = e => e.key === 'Escape' && $('#ov').classList.add('hidden');
+
+/* ---------- Arranque ---------- */
+function initApp() {
+  $('#nm').textContent = user.name; $('#av').textContent = (user.name[0] || 'U').toUpperCase();
+  if (!S.chats.length) newChat(); else { S.cur = S.cur || S.chats[0].id; renderAll() }
+  show('app');
+}
+if (user) { load(); initApp() } else setAuth('login');
+</script>
+</body>
+</html>
