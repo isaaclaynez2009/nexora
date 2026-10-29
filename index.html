@@ -217,7 +217,7 @@ details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px sol
    Mientras estén vacíos, la app funciona en MODO DEMO (todo en localStorage).
    ===================================================================== */
 const CONFIG = {
-  firebase: null,            // { apiKey, authDomain, projectId, appId }  → Fase 2
+  firebase: { apiKey: "AIzaSyDbNl-hFXLJRpQg_c0CB8ues1cZ4WjoN4g", authDomain: "nexora-67635.firebaseapp.com", projectId: "nexora-67635", appId: "1:442376896786:web:9252d12d1bdb1c27ef73cb" },
   proxyUrl: "",              // URL de tu Cloudflare Worker / Function    → Fase 3
   googleClientId: ""         // OAuth Client ID para conectores           → Fase 5
 };
@@ -237,9 +237,89 @@ let S = { chats: [], cur: null, profile: { about: '', style: '' }, memory: [], c
 let think = false, search = true, busy = false, authMode = 'login';
 
 const key = () => 'nx_data_' + (user?.email || 'x');
-const save = () => LS.set(key(), S);
+const save = () => Cloud.on ? Cloud.save() : LS.set(key(), S);
 function load() { S = Object.assign(S, LS.get(key(), {})); applyTheme() }
 function applyTheme() { document.documentElement.dataset.theme = S.settings.theme }
+
+/* ---------- Nube (Firebase) · Fase 2 ----------
+   Solo se activa si CONFIG.firebase tiene datos. Estructura en Firestore:
+   users/{uid}                → perfil, memoria, conectores y ajustes
+   users/{uid}/chats/{chatId} → un documento por chat */
+const Cloud = {
+  on: false, dead: false, snap: new Map(),
+  async init() {
+    const b = 'https://www.gstatic.com/firebasejs/10.12.2/';
+    const [A, Au, F] = await Promise.all([import(b + 'firebase-app.js'), import(b + 'firebase-auth.js'), import(b + 'firebase-firestore.js')]);
+    this.Au = Au; this.F = F;
+    const app = A.initializeApp(CONFIG.firebase);
+    this.auth = Au.getAuth(app); this.db = F.getFirestore(app); this.on = true;
+    document.addEventListener('visibilitychange', () => document.hidden && this.flush());
+    Au.onAuthStateChanged(this.auth, async u => {
+      if (!u) { user = null; show('welcome'); return }
+      try {
+        user = { uid: u.uid, email: u.email, name: u.displayName || (u.email || 'Usuario').split('@')[0] };
+        await this.load(); initApp();
+      } catch (e) { toast('No se pudieron cargar tus datos: ' + e.message); show('welcome') }
+    });
+  },
+  async load() {
+    const { F, db } = this, u = user.uid; this.dead = false;
+    S = { chats: [], cur: null, profile: { about: '', style: '' }, memory: [], conn: {}, settings: { theme: 'light' } };
+    const d = await F.getDoc(F.doc(db, 'users', u));
+    if (d.exists()) { const x = d.data(); for (const k of ['profile', 'memory', 'conn', 'settings', 'cur']) if (x[k] !== undefined) S[k] = x[k] }
+    const cs = await F.getDocs(F.collection(db, 'users', u, 'chats'));
+    this.snap.clear();
+    cs.forEach(x => { const c = x.data(); S.chats.push(c); this.snap.set(c.id, JSON.stringify(c)) });
+    if (!S.chats.some(c => c.id === S.cur)) S.cur = S.chats[0]?.id;
+    applyTheme();
+  },
+  save() { clearTimeout(this.t); this.t = setTimeout(() => this.flush(), 600) },
+  async flush() {
+    if (!this.on || this.dead || !user?.uid) return; clearTimeout(this.t);
+    const { F, db } = this, u = user.uid, clean = o => JSON.parse(JSON.stringify(o));
+    try {
+      await F.setDoc(F.doc(db, 'users', u), clean({ profile: S.profile, memory: S.memory, conn: S.conn, settings: S.settings, cur: S.cur || null, updated: Date.now() }));
+      for (const c of S.chats) { const j = JSON.stringify(c); if (this.snap.get(c.id) !== j) { await F.setDoc(F.doc(db, 'users', u, 'chats', c.id), JSON.parse(j)); this.snap.set(c.id, j) } }
+      for (const id of [...this.snap.keys()]) if (!S.chats.some(c => c.id === id)) { await F.deleteDoc(F.doc(db, 'users', u, 'chats', id)); this.snap.delete(id) }
+    } catch (e) { toast('No se pudo guardar en la nube: ' + e.message) }
+  },
+  err(e) {
+    const m = {
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.', 'auth/wrong-password': 'Correo o contraseña incorrectos.', 'auth/user-not-found': 'Correo o contraseña incorrectos.',
+      'auth/email-already-in-use': 'Ese correo ya tiene cuenta. Inicia sesión.', 'auth/weak-password': 'La contraseña necesita al menos 6 caracteres.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.', 'auth/popup-closed-by-user': 'Cerraste la ventana de Google antes de terminar.',
+      'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication → Configuración → Dominios autorizados).',
+      'auth/operation-not-allowed': 'Ese método de acceso no está activado en Firebase (Authentication → Método de acceso).',
+      'auth/network-request-failed': 'Sin conexión. Revisa tu internet.'
+    };
+    return m[e.code] || e.message;
+  },
+  async google() {
+    if (!this.on) return toast('Conectando con Firebase… inténtalo en unos segundos.');
+    try { await this.Au.signInWithPopup(this.auth, new this.Au.GoogleAuthProvider()) } catch (e) { $('#aErr').textContent = this.err(e) }
+  },
+  async email(mode, email, pass, name) {
+    if (!this.on) return toast('Conectando con Firebase… inténtalo en unos segundos.');
+    try {
+      if (mode === 'register') {
+        const r = await this.Au.createUserWithEmailAndPassword(this.auth, email, pass);
+        if (name) { await this.Au.updateProfile(r.user, { displayName: name }); if (user) { user.name = name; $('#nm').textContent = name; $('#av').textContent = name[0].toUpperCase() } }
+      } else await this.Au.signInWithEmailAndPassword(this.auth, email, pass);
+      $('#aErr').textContent = '';
+    } catch (e) { $('#aErr').textContent = this.err(e) }
+  },
+  async out() { await this.flush(); await this.Au.signOut(this.auth) },
+  async del() {
+    const { F, db, Au } = this, u = user.uid; this.dead = true; clearTimeout(this.t);
+    try {
+      const cs = await F.getDocs(F.collection(db, 'users', u, 'chats'));
+      for (const x of cs.docs) await F.deleteDoc(x.ref);
+      await F.deleteDoc(F.doc(db, 'users', u));
+      await Au.deleteUser(this.auth.currentUser);
+      toast('Cuenta y datos eliminados');
+    } catch (e) { toast(e.code === 'auth/requires-recent-login' ? 'Tus datos se borraron. Para borrar también la cuenta, cierra sesión, entra de nuevo y repite.' : this.err(e)) }
+  }
+};
 
 /* ---------- Navegación entre pantallas ---------- */
 function show(id) { ['welcome', 'auth', 'app'].forEach(x => $('#' + x).classList.toggle('hidden', x !== id)) }
@@ -264,6 +344,7 @@ $('#aGo').onclick = () => {
   const err = m => $('#aErr').textContent = m;
   if (!/^\S+@\S+\.\S+$/.test(email)) return err('Escribe un correo válido.');
   if (pass.length < 6) return err('La contraseña necesita al menos 6 caracteres.');
+  if (CONFIG.firebase) return Cloud.email(authMode, email, pass, name);
   const users = LS.get('nx_users', {});
   if (authMode === 'register') {
     if (users[email]) return err('Ese correo ya tiene cuenta. Inicia sesión.');
@@ -272,9 +353,10 @@ $('#aGo').onclick = () => {
   err(''); enter({ email, name: users[email].name });
 };
 $('#gLogin').onclick = () => {
-  if (!CONFIG.firebase) { toast('Login con Google disponible al configurar Firebase (Fase 2). Entras como invitado.'); enter({ email: 'invitado@demo', name: 'Invitado' }) }
+  if (CONFIG.firebase) return Cloud.google();
+  toast('Modo demo: configura Firebase para usar Google. Entras como invitado.'); enter({ email: 'invitado@demo', name: 'Invitado' });
 };
-$('#out').onclick = () => { localStorage.removeItem('nx_session'); user = null; show('welcome') };
+$('#out').onclick = () => { if (Cloud.on) return Cloud.out(); localStorage.removeItem('nx_session'); user = null; show('welcome') };
 
 /* ---------- Chats ---------- */
 const chat = () => S.chats.find(c => c.id === S.cur);
@@ -425,7 +507,8 @@ function tab(t) {
     $('#sT').value = S.settings.theme; $('#sT').onchange = e => { S.settings.theme = e.target.value; save(); applyTheme() };
     $('#sX').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); a.download = 'nexora-datos.json'; a.click() };
     $('#sD').onclick = () => {
-      if (!confirm('Se borrarán tu cuenta, chats y memoria de este navegador. ¿Continuar?')) return;
+      if (!confirm('Se borrarán tu cuenta, chats y memoria. ¿Continuar?')) return;
+      if (Cloud.on) { $('#ov').classList.add('hidden'); return Cloud.del() }
       const u = LS.get('nx_users', {}); delete u[user.email]; LS.set('nx_users', u); localStorage.removeItem(key()); $('#out').click(); $('#ov').classList.add('hidden');
     };
   }
@@ -442,7 +525,9 @@ function initApp() {
   if (!S.chats.length) newChat(); else { S.cur = S.cur || S.chats[0].id; renderAll() }
   show('app');
 }
-if (user) { load(); initApp() } else setAuth('login');
+setAuth('login');
+if (CONFIG.firebase) { show(''); Cloud.init().catch(e => { show('welcome'); toast('No se pudo conectar con Firebase: ' + e.message) }) }
+else if (user) { load(); initApp() }
 </script>
 </body>
 </html>
