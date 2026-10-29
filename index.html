@@ -504,6 +504,16 @@ function ask({ title, text = '', value = null, ok = 'Aceptar', danger = false })
   });
 }
 
+/* ---------- Título corto del chat ----------
+   Al empezar usa las palabras clave de tu pregunta; cuando Nexora responde, ella propone un resumen de 2-5 palabras. */
+const TSTOP = new Set('explícame explicame explica dame dime resume resúmeme resumeme busca búscame ayúdame ayudame ayuda hazme cuéntame cuentame recomiéndame prepárame compara escribe redacta crea genera quiero necesito puedes podrías hola por favor que qué cómo como cuál cual cuáles cuales es son era a de la el los las un una unos unas del al en con para sobre y o e u me mi mis tu tus se lo le les si no muy más mas algo ejemplo sencillo sencilla cinco tres dos breve breves fácil facil'.split(' '));
+function shortTitle(t) {
+  const w = t.replace(/[¿?¡!.,;:()"“”]/g, ' ').split(/\s+/).filter(x => x && !TSTOP.has(x.toLowerCase())).slice(0, 4).join(' ') || t.slice(0, 30);
+  return w.charAt(0).toUpperCase() + w.slice(1, 40);
+}
+const TITLE_RULE = '\nRegla de formato: en tu PRIMERA respuesta de esta conversación, empieza con una sola línea [[titulo: ...]] con un resumen de 2 a 5 palabras de qué va el chat (sin punto final), deja una línea en blanco y responde con normalidad. No menciones esta regla.';
+const stripTitle = t => t.replace(/^\s*\[\[[^\]]*(\]\]\s*)?|^\s*\[$/, '');
+
 /* ---------- Chats ---------- */
 const chat = () => S.chats.find(c => c.id === S.cur);
 function newChat() {
@@ -632,7 +642,7 @@ async function askAI(c, onTick) {
   const token = await Cloud.auth.currentUser.getIdToken();
   const r = await fetch(CONFIG.proxyUrl, {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-    body: JSON.stringify({ system: systemPrompt(), messages: c.msgs.map(m => ({ role: m.role, content: m.text, images: IMGS[m.id] || [] })), think, search })
+    body: JSON.stringify({ system: systemPrompt() + (c.msgs.length === 1 ? TITLE_RULE : ''), messages: c.msgs.map(m => ({ role: m.role, content: m.text, images: IMGS[m.id] || [] })), think, search })
   });
   if (!r.ok) {
     const raw = await r.text().catch(() => ''); let det = ''; try { det = JSON.parse(raw).error?.message || '' } catch { det = raw }
@@ -664,7 +674,7 @@ async function askAI(c, onTick) {
   return out;
 }
 let live = null;   // respuesta en curso: { id del chat, o: texto parcial }
-const typingHTML = () => `<div id="typing">${live.o && (live.o.text || live.o.reasoning) ? msgHTML({ role: 'assistant', text: live.o.text, reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
+const typingHTML = () => `<div id="typing">${live.o && (stripTitle(live.o.text) || live.o.reasoning) ? msgHTML({ role: 'assistant', text: stripTitle(live.o.text), reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
 async function sendMsg() {
   let t = $('#inp').value.trim(); if (!t && !pending.length) return;
   if (busy) return toast('Nexora aún está respondiendo. Espera un momento.');
@@ -674,7 +684,7 @@ async function sendMsg() {
   const mid = uid(); c.msgs.push({ id: mid, role: 'user', text: t, n: pending.length }); c.ts = Date.now();
   if (pending.length) IMGS[mid] = pending.map(x => x.data);
   pending = []; drawThumbs();
-  if (c.msgs.length === 1) c.title = t === '(imagen)' ? 'Imagen' : t.slice(0, 40);
+  if (c.msgs.length === 1) c.title = t === '(imagen)' ? 'Imagen' : shortTitle(t);
   live = { id: c.id, o: null };
   $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
   let raf = 0;
@@ -686,7 +696,9 @@ async function sendMsg() {
   let reply;
   try {
     const r = await askAI(c, tick);
-    reply = { role: 'assistant', text: (r.fallback ? '**Aviso:** la búsqueda web no estuvo disponible, así que respondo sin consultar internet.\n\n' : '') + (r.text || '(sin respuesta)'), reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' };
+    const mt = (r.text || '').match(/^\s*\[\[titulo:\s*([^\]]{2,80})\]\]/i);
+    if (mt && S.chats.includes(c) && c.msgs.length === 1) c.title = mt[1].trim().replace(/^./, ch => ch.toUpperCase()).slice(0, 50);
+    reply = { role: 'assistant', text: (r.fallback ? '**Aviso:** la búsqueda web no estuvo disponible, así que respondo sin consultar internet.\n\n' : '') + (stripTitle(r.text || '') || '(sin respuesta)'), reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' };
   } catch (e) { reply = { role: 'assistant', text: 'No pude responder: ' + e.message } }
   live = null; busy = false; $('#send').disabled = false;
   // Si borraste el chat mientras Nexora respondía, la respuesta se descarta
