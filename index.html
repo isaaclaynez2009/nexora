@@ -91,7 +91,10 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .bub code{font-family:ui-monospace,Menlo,monospace;background:#12286b1a;padding:1px 5px;border-radius:5px;font-size:.9em}
 .bub pre code{background:none;padding:0}
 .cp{position:absolute;top:6px;right:6px;font-size:12px;color:#9fb4ee;background:#ffffff15;padding:3px 8px;border-radius:6px}
-.bub p+p,.bub ul{margin-top:8px}.bub ul{padding-left:20px}
+.bub p,.bub ul,.bub ol,.bub .tw{margin-top:8px}.bub>:first-child{margin-top:0}.bub ul,.bub ol{padding-left:22px}
+.bub h3,.bub h4,.bub h5,.bub h6{font-family:var(--serif);font-size:1.05em;margin:14px 0 2px}
+.tw{overflow-x:auto}.tw table{border-collapse:collapse;font-size:14px}.tw th,.tw td{border:1px solid var(--line);padding:6px 10px;text-align:left}.tw th{background:var(--bg)}
+.nt{font-size:12.5px;color:var(--mut);background:var(--bg);border-left:3px solid var(--cyan);padding:6px 10px;border-radius:6px;margin-bottom:8px}
 details.th{margin-bottom:8px;font-size:13px;color:var(--mut);border-left:3px solid var(--cyan);padding-left:10px}
 .src{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
 .src a{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--navy3);text-decoration:none}
@@ -512,7 +515,7 @@ function shortTitle(t) {
   return w.charAt(0).toUpperCase() + w.slice(1, 40);
 }
 const TITLE_RULE = '\nRegla de formato: en tu PRIMERA respuesta de esta conversación, empieza con una sola línea [[titulo: ...]] con un resumen de 2 a 5 palabras de qué va el chat (sin punto final), deja una línea en blanco y responde con normalidad. No menciones esta regla.';
-const stripTitle = t => t.replace(/^\s*\[\[[^\]]*(\]\]\s*)?|^\s*\[$/, '');
+const stripTitle = t => t.replace(/\[\[titulo:[^\]]*(\]{1,2}\s*)?/i, '').replace(/^\s*\[{1,2}[a-z]{0,6}$/i, '');
 
 /* ---------- Chats ---------- */
 const chat = () => S.chats.find(c => c.id === S.cur);
@@ -554,11 +557,36 @@ $('#newChat').onclick = () => {
 
 /* ---------- Render de mensajes (Markdown mínimo y seguro) ---------- */
 function md(t) {
-  let h = esc(t);
-  h = h.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><button class="cp">Copiar</button><code>${c.trim()}</code></pre>`);
-  h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-  h = h.replace(/(^|\n)- (.+)/g, '$1<li>$2</li>').replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
-  return h.split(/\n{2,}/).map(p => /^<(pre|ul)/.test(p) ? p : `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+  const code = [];
+  // Bloques de código: se apartan para no tocarlos (también si aún no se ha cerrado durante el streaming)
+  const h = esc(t).replace(/```(\w*)\n?([\s\S]*?)(```|$)/g, (_, l, c) => { code.push(`<pre><button class="cp">Copiar</button><code>${c.replace(/\n$/, '')}</code></pre>`); return `\u0000${code.length - 1}\u0000` });
+  const inline = x => x.replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
+    .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  const BUL = /^\s*[-*•]\s+/, NUM = /^\s*\d+[.)]\s+/, TAB = /^\s*\|.+\|\s*$/, TOK = /^\u0000\d+\u0000$/;
+  const L = h.split('\n'), out = []; let i = 0;
+  while (i < L.length) {
+    const ln = L[i]; let m;
+    if (!ln.trim()) { i++; continue }
+    if (TOK.test(ln.trim())) { out.push(ln.trim()); i++; continue }
+    if ((m = /^(#{1,4})\s+(.+)$/.exec(ln))) { const n = m[1].length + 2; out.push(`<h${n}>${inline(m[2])}</h${n}>`); i++; continue }
+    if (BUL.test(ln) || NUM.test(ln)) {
+      const ord = NUM.test(ln), re = ord ? NUM : BUL, items = [];
+      while (i < L.length && re.test(L[i])) { items.push(`<li>${inline(L[i].replace(/^\s*(?:[-*•]|\d+[.)])\s+/, ''))}</li>`); i++ }
+      out.push(ord ? `<ol>${items.join('')}</ol>` : `<ul>${items.join('')}</ul>`); continue;
+    }
+    if (TAB.test(ln) && i + 1 < L.length && TAB.test(L[i + 1]) && L[i + 1].includes('-')) {
+      const cells = r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => inline(c.trim()));
+      const head = cells(ln); i += 2; const rows = [];
+      while (i < L.length && TAB.test(L[i])) rows.push(cells(L[i++]));
+      out.push(`<div class="tw"><table><thead><tr>${head.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`); continue;
+    }
+    const para = [];
+    while (i < L.length && L[i].trim() && !TOK.test(L[i].trim()) && !/^#{1,4}\s/.test(L[i]) && !BUL.test(L[i]) && !NUM.test(L[i]) && !TAB.test(L[i])) para.push(inline(L[i++]));
+    if (!para.length) para.push(inline(L[i++]));   // línea suelta rara: evita bucles infinitos
+    out.push(`<p>${para.join('<br>')}</p>`);
+  }
+  return out.join('').replace(/\u0000(\d+)\u0000/g, (_, n) => code[+n]);
 }
 function msgHTML(m) {
   if (m.role === 'user') {
@@ -566,11 +594,12 @@ function msgHTML(m) {
     const nota = !im && m.n ? `<div style="opacity:.8;font-size:13px;display:flex;gap:6px;align-items:center">${ic('image', 14)} ${m.n} imagen(es) adjunta(s) · no se guardan al recargar</div>` : '';
     return `<div class="m u"><div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
   }
+  const nt = m.notice ? `<div class="nt">${esc(m.notice)}</div>` : '';
   const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
   // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
   const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
   const ent = m.entry ? `<iframe class="sx" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${esc(m.entry)}" title="Sugerencias de búsqueda de Google"></iframe>` : '';
-  return `<div class="m a"><span class="av2">${logo(26)}</span><div class="bub">${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}</div></div>`;
+  return `<div class="m a"><span class="av2">${logo(26)}</span><div class="bub">${nt}${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}</div></div>`;
 }
 function renderMsgs() {
   const c = chat(), w = $('#wrap');
@@ -650,7 +679,7 @@ async function askAI(c, onTick) {
     throw new Error((e || 'Gemini respondió ' + r.status + '.') + (det ? ' Detalle: ' + det.slice(0, 700) : ''));
   }
   // Lee el flujo SSE de Gemini: cada "data:" trae un trozo de texto, de razonamiento o metadatos de búsqueda
-  const out = { text: r.headers.get('X-Nexora-Search') === 'off' ? '*(La búsqueda web no estaba disponible ahora, así que respondo sin ella.)*\n\n' : '', reasoning: '', sources: [], entry: '' };
+  const out = { text: '', notice: r.headers.get('X-Nexora-Search') === 'off' ? 'La búsqueda web no estaba disponible ahora, así que respondo sin ella.' : '', reasoning: '', sources: [], entry: '' };
   const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
   try {
     for (;;) {
@@ -674,7 +703,7 @@ async function askAI(c, onTick) {
   return out;
 }
 let live = null;   // respuesta en curso: { id del chat, o: texto parcial }
-const typingHTML = () => `<div id="typing">${live.o && (stripTitle(live.o.text) || live.o.reasoning) ? msgHTML({ role: 'assistant', text: stripTitle(live.o.text), reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
+const typingHTML = () => `<div id="typing">${live.o && (stripTitle(live.o.text) || live.o.reasoning) ? msgHTML({ role: 'assistant', text: stripTitle(live.o.text), notice: live.o.notice, reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
 async function sendMsg() {
   let t = $('#inp').value.trim(); if (!t && !pending.length) return;
   if (busy) return toast('Nexora aún está respondiendo. Espera un momento.');
@@ -696,9 +725,9 @@ async function sendMsg() {
   let reply;
   try {
     const r = await askAI(c, tick);
-    const mt = (r.text || '').match(/^\s*\[\[titulo:\s*([^\]]{2,80})\]\]/i);
+    const mt = (r.text || '').match(/\[\[titulo:\s*([^\]]{2,80})\]\]/i);
     if (mt && S.chats.includes(c) && c.msgs.length === 1) c.title = mt[1].trim().replace(/^./, ch => ch.toUpperCase()).slice(0, 50);
-    reply = { role: 'assistant', text: (r.fallback ? '**Aviso:** la búsqueda web no estuvo disponible, así que respondo sin consultar internet.\n\n' : '') + (stripTitle(r.text || '') || '(sin respuesta)'), reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' };
+    reply = { role: 'assistant', text: stripTitle(r.text || '') || '(sin respuesta)', notice: r.notice || '', reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' };
   } catch (e) { reply = { role: 'assistant', text: 'No pude responder: ' + e.message } }
   live = null; busy = false; $('#send').disabled = false;
   // Si borraste el chat mientras Nexora respondía, la respuesta se descarta
