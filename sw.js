@@ -1,7 +1,7 @@
 /* Nexora · service worker: guarda la "carcasa" de la app para que abra rápido y funcione sin conexión.
    Nunca guarda chats, respuestas de la IA ni datos de Google: solo los archivos propios de la web. */
 const V = 'nexora-v1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
+const SHELL = ['./', 'index.html', 'manifest.webmanifest'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())) });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())) });
 self.addEventListener('fetch', e => {
