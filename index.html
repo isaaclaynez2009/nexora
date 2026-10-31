@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nexora</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230A1A3F'/><path d='M9 23V9l14 14V9' stroke='%2322D3EE' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ===== Tokens de diseño ===== */
 :root{--navy:#0A1A3F;--navy2:#12286B;--navy3:#1B3A8C;--cyan:var(--a2);--bg:#F6F8FC;--card:#fff;--ink:#0A1A3F;--mut:#5B6785;--line:#E2E8F3;--side:#0A1A3F;--sideink:#DCE6FF;--r:16px}
@@ -190,6 +190,27 @@ html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8A
 .lc{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:inherit;background:var(--bg)}
 .lc:hover{border-color:var(--acc)}.lc img{width:96px;height:54px;object-fit:cover;border-radius:8px;flex:none}.lc small{display:block;color:var(--mut)}
 .chip.dim{opacity:.4;pointer-events:none}
+
+/* ===== v3: aspecto profesional y 3 colores (azul, naranja, verde) con modo claro/oscuro ===== */
+:root{--serif:Manrope,system-ui,sans-serif}
+.logo,.hero h1,.panel h2,.mh,.top h3,.bub h3,.bub h4,.bub h5,.bub h6,.dlg h4,.empty h2{font-family:Manrope,system-ui,sans-serif}
+.hero h1,.empty h2,.panel h2{font-weight:800;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;font-weight:800}
+.empty .kick{font-family:inherit;font-style:normal;font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--a1);margin-top:16px}
+:root[data-theme=dark] .empty .kick{color:var(--a2)}
+.sug button{box-shadow:none;border:1px solid var(--line);transform:none!important;transition:border-color .2s,background .2s}
+.sug button:hover{border-color:var(--a1);background:var(--bg)}
+.blob{opacity:.08}
+#msgs{background-image:none}
+.u .bub{border-radius:16px}
+html[data-theme=dark] .u .bub{background:var(--navy3)}
+html[data-pal=oceano]{--bg:#F4F7FC}
+html[data-pal=naranja]{--navy:#431407;--navy2:#9A3412;--navy3:#C2410C;--a1:#EA580C;--a2:#FDBA74;--side:#2B0E04;--bg:#FBF6F1;--ink:#431407;--mut:#8A6A55;--line:#EBDDD0}
+html[data-pal=bosque]{--navy:#052E1B;--navy2:#0B5D36;--navy3:#15803D;--a1:#16A34A;--a2:#86EFAC;--side:#04230F;--bg:#F2F8F4;--ink:#052E1B;--mut:#587566;--line:#D5E6DB}
+html[data-theme=dark][data-pal=oceano]{--bg:#070F26;--card:#0E1B40;--line:#1E2F63;--side:#050C1E;--ink:#EAF0FF;--mut:#9AA8CC}
+html[data-theme=dark][data-pal=naranja]{--bg:#150C06;--card:#22140B;--line:#3D2514;--side:#0F0803;--ink:#FFF1E6;--mut:#C9A98F}
+html[data-theme=dark][data-pal=bosque]{--bg:#06130C;--card:#0D2216;--line:#1B3F2A;--side:#040E08;--ink:#E9FBEF;--mut:#8FBFA1}
+#thm{color:#cfdcff;padding:7px 9px;border-radius:8px}#thm:hover{background:#ffffff1a}
 </style>
 </head>
 <body>
@@ -243,7 +264,7 @@ html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8A
     <input id="q" placeholder="Buscar en tus chats" aria-label="Buscar chats">
     <div id="list"></div>
     <div class="me"><div class="av" id="av">U</div><div class="nm" id="nm">Usuario</div>
-      <button id="openSet" title="Perfil y ajustes" aria-label="Perfil y ajustes"><i data-ic="sliders" data-s="20"></i></button></div>
+      <button id="thm" title="Cambiar entre modo claro y oscuro" aria-label="Cambiar tema"></button><button id="openSet" title="Perfil y ajustes" aria-label="Perfil y ajustes"><i data-ic="sliders" data-s="20"></i></button></div>
     <button id="out"><i data-ic="logout" data-s="16"></i> Cerrar sesión</button>
   </aside>
   <main>
@@ -315,7 +336,9 @@ const IC = {
   photo: '<path d="M12 12c0-3.5 1-6 3-7 1.5 2 1.5 4.5 0 7zM12 12c3.5 0 6-1 7-3-2-1.5-4.5-1.5-7 0zM12 12c0 3.5-1 6-3 7-1.5-2-1.5-4.5 0-7zM12 12c-3.5 0-6 1-7 3 2 1.5 4.5 1.5 7 0z"/>',
   mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="M4.5 8l7.5 5.5L19.5 8"/>',
   play: '<rect x="3.5" y="5.5" width="17" height="13" rx="4"/><path d="M10.5 9.5v5l4.5-2.5z"/>',
-  route: '<path d="M12 20.5s-5.5-5-5.5-9.2a5.5 5.5 0 0 1 11 0c0 4.2-5.5 9.2-5.5 9.2z"/><circle cx="12" cy="11.3" r="2"/>'
+  route: '<path d="M12 20.5s-5.5-5-5.5-9.2a5.5 5.5 0 0 1 11 0c0 4.2-5.5 9.2-5.5 9.2z"/><circle cx="12" cy="11.3" r="2"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/>',
+  moon: '<path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z"/>'
 };
 const ic = (n, z = 18) => `<svg class="ic" viewBox="0 0 24 24" width="${z}" height="${z}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 const logo = (z = 30) => `<svg viewBox="0 0 32 32" width="${z}" height="${z}" aria-hidden="true"><rect width="32" height="32" rx="10" style="fill:var(--navy2)"/><path d="M9 23.5C9.3 18 9 13.5 9.6 9.2 13.2 13.4 17.4 19.2 22.4 23.4 22.6 18.4 22.3 13.6 23 8.8" style="fill:none;stroke:var(--a2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round"/></svg>`;
@@ -323,7 +346,7 @@ function hydrate(r = document) {
   r.querySelectorAll('[data-ic]').forEach(e => { e.outerHTML = ic(e.dataset.ic, +e.dataset.s || 18) });
   r.querySelectorAll('[data-logo]').forEach(e => { e.outerHTML = logo(+e.dataset.logo) });
 }
-const PALS = [['oceano', 'Océano', '#12286B', '#22D3EE'], ['aurora', 'Aurora', '#4B2A93', '#F472B6'], ['bosque', 'Bosque', '#13524B', '#C4E86B'], ['atardecer', 'Atardecer', '#7A2748', '#FFC857'], ['grafito', 'Grafito', '#2A2F3A', '#E2C275']];
+const PALS = [['oceano', 'Azul', '#1B3A8C', '#22D3EE'], ['naranja', 'Naranja', '#C2410C', '#FDBA74'], ['bosque', 'Verde', '#15803D', '#86EFAC']];
 
 /* ---------- Estado ---------- */
 let user = LS.get('nx_session', null);
@@ -333,7 +356,7 @@ let think = false, search = true, busy = false, authMode = 'login';
 const key = () => 'nx_data_' + (user?.email || 'x');
 const save = () => Cloud.on ? Cloud.save() : LS.set(key(), S);
 function load() { S = Object.assign(S, LS.get(key(), {})); applyTheme() }
-function applyTheme() { document.documentElement.dataset.theme = S.settings.theme; document.documentElement.dataset.pal = S.settings.pal || 'oceano'; document.body.style.fontSize = ({ pequeña: '14px', grande: '17px' })[S.settings.font] || '' }
+function applyTheme() { document.documentElement.dataset.theme = S.settings.theme; S.settings.pal = ({ atardecer: 'naranja', cereza: 'naranja', aurora: 'oceano', grafito: 'oceano' })[S.settings.pal] || S.settings.pal || 'oceano'; document.documentElement.dataset.pal = S.settings.pal; const tb = document.getElementById('thm'); if (tb) tb.innerHTML = ic(S.settings.theme === 'dark' ? 'sun' : 'moon', 20); document.body.style.fontSize = ({ pequeña: '14px', grande: '17px' })[S.settings.font] || '' }
 
 /* ---------- Nube (Firebase) · Fase 2 ----------
    Solo se activa si CONFIG.firebase tiene datos. Estructura en Firestore:
@@ -1155,6 +1178,7 @@ async function runMode(t) {
   } catch (e) { toast(e.message); return false }
 }
 
+$('#thm').onclick = () => { S.settings.theme = S.settings.theme === 'dark' ? 'light' : 'dark'; save(); applyTheme() };
 $('#send').onclick = sendMsg;
 $('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } };
 $('#inp').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' };
@@ -1201,6 +1225,8 @@ function tab(t) {
       const k = e.target.closest('[data-k]')?.dataset.k; if (!k) return;
       if (!CONFIG.googleClientId) return toast('Falta el Client ID de Google en CONFIG.googleClientId (mira la guía).');
       if (S.conn[k]) { S.conn[k] = false; if (!gOn()) gWipe(true); save(); tab('c'); return toast('Desconectado de Nexora. Para revocar el permiso en Google: myaccount.google.com/permissions') }
+      const nm = (CONNECTORS.find(c => c[0] === k) || [])[2] || 'Google';
+      if (!await ask({ title: 'Conectar ' + nm, text: 'Nexora se va a conectar a tu cuenta de Google para usar ' + nm + '. Solo accede cuando tú se lo pides y no guarda tus archivos en ningún servidor. Puedes revertirlo cuando quieras: pulsa Desconectar aquí mismo, o quita el permiso en myaccount.google.com/permissions.', ok: 'Continuar' })) return;
       S.conn[k] = true;
       try { await gToken(true); await gVerify(); save(); toast('Conectado como ' + GX.email) } catch (err) { S.conn[k] = false; toast(err.message) }
       tab('c');
