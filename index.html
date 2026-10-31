@@ -344,7 +344,7 @@ button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipula
 const CONFIG = {
   firebase: { apiKey: "AIzaSyDbNl-hFXLJRpQg_c0CB8ues1cZ4WjoN4g", authDomain: "nexora-67635.firebaseapp.com", projectId: "nexora-67635", appId: "1:442376896786:web:9252d12d1bdb1c27ef73cb" },
   proxyUrl: "https://nexoria-ia.isaaclaynezgonzaleztrabajo.workers.dev",              // URL de tu Cloudflare Worker / Function    → Fase 3
-  googleClientId: "442376896786-ke0s4hfll4k56gq3if0f15pqut82nu1q.apps.googleusercontent.com"         // OAuth Client ID para conectores           → Fase 5
+  googleClientId: "442376896786-velmhl1k3oehm3g5vk21j5k1batbeb7s.apps.googleusercontent.com"         // OAuth Client ID para conectores           → Fase 5
 };
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -1265,7 +1265,7 @@ function tab(t) {
     };
   }
   if (t === 'c') {
-    mb.innerHTML = `<p class="note">Nexora pedirá solo los permisos mínimos y leerá únicamente los archivos que elijas. Nexora lee tus archivos en tu navegador con un permiso de 1 hora. Solo escribe en Google cuando tú pulsas «Enviar a Google».</p>` +
+    mb.innerHTML = `<p class="note">Nexora pedirá solo los permisos mínimos y leerá únicamente los archivos que elijas. Nexora lee tus archivos en tu navegador con un permiso de 1 hora. Solo escribe en Google cuando tú pulsas «Enviar a Google». Si Google muestra <b>origin_mismatch</b>, el origen que debes añadir en Google Cloud es exactamente: <b>${location.origin}</b></p>` +
       CONNECTORS.map(([k, i, n, d, sc]) => `<div class="con"><i>${ic(i, 26)}</i><div><b>${n}</b><small>${d}</small></div><button class="btn ${S.conn[k] ? 'ghost' : 'pri'}" data-k="${k}">${S.conn[k] ? 'Desconectar' : 'Conectar'}</button></div>`).join('');
     mb.insertAdjacentHTML('beforeend', '<label class="field" style="display:flex;gap:8px;align-items:center;margin-top:14px"><input type="checkbox" id="gAll" style="width:auto;margin:0"> Que Nexora busque en todo mi Drive en cada pregunta</label><p class="note">Google indexa todos tus archivos; Nexora lee los más relacionados con tu pregunta (hasta 8) y usa los fragmentos que importan. Se ven en tu mensaje y puedes abrirlos.</p>');
     $('#gAll').checked = !!S.settings.gall; $('#gAll').onchange = e => { S.settings.gall = e.target.checked; save() };
