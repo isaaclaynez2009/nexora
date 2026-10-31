@@ -774,7 +774,7 @@ function shrink(src, max, q) {
 async function genImage(text, token) {
   ctrl = new AbortController();
   const r = await fetch(CONFIG.proxyUrl, { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ mode: 'image', prompt: text }) });
-  if (!r.ok) { let d = ''; try { const e = JSON.parse(await r.text()).error; d = typeof e === 'string' ? e : e?.message || '' } catch {} throw new Error(d || 'El servidor respondió ' + r.status) }
+  if (!r.ok) { let d = '', raw = await r.text(); try { const e = JSON.parse(raw).error; d = typeof e === 'string' ? e : e?.message || '' } catch { d = raw.slice(0, 160) } if (r.status === 400 && /no válida/i.test(d)) d = 'El Worker de Cloudflare es la versión antigua y no sabe crear imágenes. Pega el worker.js nuevo y pulsa Deploy.'; throw new Error(d || 'El servidor respondió ' + r.status) }
   const j = await r.json();
   // Se guarda una versión pequeña en el chat (límite de 1 MiB por chat) y la grande solo en memoria
   const keep = chat().msgs.filter(m => m.img).length < 12 ? await shrink(j.image, 512, .6) : '';
