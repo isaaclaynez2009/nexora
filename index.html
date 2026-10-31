@@ -317,7 +317,7 @@ button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipula
         <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Archivo<input type="file" id="file" accept="image/*,.txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.log,.yml,.yaml,.sql" hidden multiple></label>
         <button class="chip on" id="tSearch"><i data-ic="globe" data-s="16"></i> Buscar en la web</button>
         <button class="chip" id="tThink"><i data-ic="brain" data-s="16"></i> Pensar a fondo</button>
-        <button class="chip" id="tG" type="button" title="Buscar y adjuntar desde tu Google Drive, Docs, Hojas o Fotos">Google</button><button class="chip md" data-m="img" id="tImg" type="button" title="Nexora dibuja lo que le pidas"><i data-ic="image" data-s="16"></i> Crear imagen</button><button class="chip md" data-m="drive" type="button" title="Busca y lee en todo tu Drive"><i data-ic="folder" data-s="16"></i> Drive</button><button class="chip md" data-m="mail" type="button" title="Busca y lee tus correos"><i data-ic="mail" data-s="16"></i> Gmail</button><button class="chip md" data-m="yt" type="button" title="Busca vídeos y mira tus listas"><i data-ic="play" data-s="16"></i> YouTube</button><button class="chip md" data-m="map" type="button" title="Rutas y cómo llegar"><i data-ic="route" data-s="16"></i> Maps</button><button class="chip" id="mic" type="button">Voz</button><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
+        <button class="chip" id="tG" type="button" title="Buscar y adjuntar desde tu Google Drive, Docs, Hojas o Fotos">Google</button><button class="chip md" data-m="img" id="tImg" type="button" title="Nexora dibuja lo que le pidas"><i data-ic="image" data-s="16"></i> Crear imagen</button><button class="chip md" data-m="drive" type="button" title="Busca y lee en todo tu Drive"><i data-ic="folder" data-s="16"></i> Drive</button><button class="chip md" data-m="docs" type="button" title="Busca y lee tus Documentos de Google"><i data-ic="doc" data-s="16"></i> Docs</button><button class="chip md" data-m="sheets" type="button" title="Busca y lee tus Hojas de cálculo"><i data-ic="sheet" data-s="16"></i> Sheets</button><button class="chip md" data-m="mail" type="button" title="Busca y lee tus correos"><i data-ic="mail" data-s="16"></i> Gmail</button><button class="chip md" data-m="yt" type="button" title="Busca vídeos y mira tus listas"><i data-ic="play" data-s="16"></i> YouTube</button><button class="chip md" data-m="map" type="button" title="Rutas y cómo llegar"><i data-ic="route" data-s="16"></i> Maps</button><button class="chip" id="mic" type="button">Voz</button><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
       </div>
     </div></div>
   </main>
@@ -712,7 +712,7 @@ function systemPrompt() {
   if (S.profile.style) s += `\nInstrucciones del usuario: ${S.profile.style}`;
   if (S.memory.length) s += `\nRecuerdos:\n- ` + S.memory.join('\n- ');
   const L = { corta: 'Responde de forma breve y directa.', detallada: 'Responde con detalle y ejemplos.' }[S.settings.len]; if (L) s += '\n' + L;
-  const MR = { drive: 'Modo Drive: responde solo con los archivos de Drive adjuntos; si la respuesta no está en ellos, dilo.', mail: 'Modo Gmail: responde solo con los correos adjuntos; si no está la información, dilo. Resume sin inventar.', yt: 'Modo YouTube: habla solo de los vídeos, canales o listas adjuntos y recomienda con criterio.', map: 'Modo Maps: explica la ruta con los datos adjuntos, en pasos claros, y recuerda abrir el enlace de Google Maps.' }[mode]; if (MR) s += '\n' + MR;
+  const MR = { drive: 'Modo Drive: responde solo con los archivos de Drive adjuntos; si la respuesta no está en ellos, dilo.', mail: 'Modo Gmail: responde solo con los correos adjuntos; si no está la información, dilo. Resume sin inventar.', yt: 'Modo YouTube: habla solo de los vídeos, canales o listas adjuntos y recomienda con criterio.', map: 'Modo Maps: explica la ruta con los datos adjuntos, en pasos claros, y recuerda abrir el enlace de Google Maps.', docs: 'Modo Docs: responde solo con los documentos adjuntos y cita el documento del que sacas cada dato.', sheets: 'Modo Sheets: responde solo con los datos de las hojas adjuntas; haz los cálculos con cuidado y dilo si falta información.' }[mode]; if (MR) s += '\n' + MR;
   return s;
 }
 
@@ -836,7 +836,7 @@ async function sendMsg() {
   renderAll();
 }
 let ctrl = null, imageOn = false, mode = '';
-const MODEPH = { img: 'Describe la imagen que quieres crear', drive: 'Pregunta sobre tus archivos de Drive', mail: 'Pregunta sobre tus correos de Gmail', yt: 'Busca vídeos o pregunta por tus listas de YouTube', map: 'Dime a dónde quieres ir, por ejemplo: cómo llegar a la Alhambra' };
+const MODEPH = { img: 'Describe la imagen que quieres crear', drive: 'Pregunta sobre tus archivos de Drive', mail: 'Pregunta sobre tus correos de Gmail', yt: 'Busca vídeos o pregunta por tus listas de YouTube', map: 'Dime a dónde quieres ir, por ejemplo: cómo llegar a la Alhambra', docs: 'Pregunta sobre tus Documentos de Google', sheets: 'Pregunta sobre tus Hojas de cálculo' };
 function setMode(m) {
   mode = mode === m ? '' : m; imageOn = mode === 'img';
   document.querySelectorAll('.chip.md').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
@@ -904,17 +904,40 @@ $('#exp').onclick = () => {
   a.download = (c.title || 'chat').replace(/[^\w\- áéíóúñ]+/gi, '').trim().slice(0, 40) + '.md'; a.click();
 };
 
-/* Dictado por voz */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let rec = null;
-if (!SR) $('#mic').classList.add('hidden');
-$('#mic').onclick = () => {
-  if (rec) return rec.stop();
-  rec = new SR(); rec.lang = 'es-ES'; rec.interimResults = true; rec.continuous = true;
-  const base = $('#inp').value ? $('#inp').value + ' ' : '';
-  rec.onresult = e => { $('#inp').value = base + [...e.results].map(r => r[0].transcript).join(''); $('#inp').dispatchEvent(new Event('input')) };
-  rec.onend = () => { rec = null; $('#mic').classList.remove('rec') };
-  rec.onerror = () => toast('No pude usar el micrófono. Revisa el permiso del navegador.');
-  rec.start(); $('#mic').classList.add('rec');
+/* Dictado por voz: se graba el audio y Gemini lo transcribe (funciona en Brave, Chrome, Edge y iPhone, donde el dictado nativo falla) */
+let mr = null, chunks = [];
+async function wavFrom(blob) {
+  const ac = new (window.AudioContext || window.webkitAudioContext)(), buf = await ac.decodeAudioData(await blob.arrayBuffer()); ac.close();
+  const oc = new OfflineAudioContext(1, Math.max(1, Math.ceil(buf.duration * 16000)), 16000), src = oc.createBufferSource(); src.buffer = buf; src.connect(oc.destination); src.start();
+  const pcm = (await oc.startRendering()).getChannelData(0), v = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const w = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 16000, true); v.setUint32(28, 32000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+  pcm.forEach((x, i) => v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, x)) * 0x7fff, true));
+  let s = ''; const u = new Uint8Array(v.buffer); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function transcribe(blob) {
+  const token = await Cloud.auth.currentUser.getIdToken();
+  const r = await fetch(CONFIG.proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ mode: 'stt', audio: await wavFrom(blob) }) });
+  if (!r.ok) { let d = ''; const raw = await r.text(); try { d = JSON.parse(raw).error || '' } catch { d = raw.slice(0, 120) } throw new Error(/no válida/i.test(d) ? 'El Worker de Cloudflare es la versión antigua: pega el worker.js nuevo y pulsa Deploy.' : d || 'El servidor respondió ' + r.status) }
+  return (await r.json()).text || '';
+}
+if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) $('#mic').classList.add('hidden');
+$('#mic').onclick = async () => {
+  if (mr) return mr.stop();
+  if (!CONFIG.proxyUrl || !Cloud.on || !Cloud.auth.currentUser) return toast('Inicia sesión para usar la voz.');
+  let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: true }) } catch (e) { return toast(e.name === 'NotAllowedError' ? 'Permiso de micrófono denegado. Actívalo en el candado de la barra de direcciones.' : 'No encuentro ningún micrófono.') }
+  chunks = []; mr = new MediaRecorder(st); const mime = mr.mimeType;
+  mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+  mr.onstop = async () => {
+    st.getTracks().forEach(t => t.stop()); mr = null; $('#mic').classList.remove('rec');
+    const blob = new Blob(chunks, { type: mime }); if (blob.size < 2000) return toast('No he oído nada.');
+    toast('Transcribiendo…');
+    try { const t = await transcribe(blob); if (!t) return toast('No entendí el audio.'); const i = $('#inp'); i.value = (i.value ? i.value + ' ' : '') + t; i.dispatchEvent(new Event('input')); i.focus() } catch (e) { toast(e.message) }
+  };
+  mr.start(); $('#mic').classList.add('rec'); toast('Grabando… pulsa Voz otra vez para parar');
+  setTimeout(() => mr?.state === 'recording' && mr.stop(), 60000);   // máximo 1 minuto
 };
 
 /* Atajos: Ctrl+K busca chats · Alt+N chat nuevo */
@@ -936,18 +959,49 @@ const gLoad = () => window.google?.accounts?.oauth2 ? Promise.resolve() : new Pr
   const sc = document.createElement('script'); sc.src = 'https://accounts.google.com/gsi/client'; sc.onload = ok;
   sc.onerror = () => no(new Error('No pude cargar Google. Revisa tu conexión.')); document.head.appendChild(sc);
 });
+const gTok1 = (prompt, force) => new Promise((ok, no) => {
+  const scope = Object.keys(S.conn).filter(k => S.conn[k] && GSC[k]).map(k => GSC[k]).join(' ');
+  if (!scope) return no(new Error('Conecta primero un servicio de Google en Ajustes → Conectores.'));
+  google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.googleClientId, scope: 'openid email ' + scope, login_hint: force ? undefined : (user?.email || undefined), prompt,
+    callback: r => { if (r.error) return no(new Error('Google no dio permiso (' + r.error + ').')); GX.tok = r.access_token; GX.exp = Date.now() + (r.expires_in || 3600) * 1e3; ok(GX.tok) },
+    error_callback: e => no(new Error(e.type === 'popup_closed' ? 'Cerraste la ventana de Google.' : 'No se pudo abrir la ventana de Google (¿bloqueador de ventanas emergentes?).'))
+  }).requestAccessToken();
+});
+/* El permiso de Google dura 1 hora (límite de las webs sin servidor). Se renueva solo y en silencio si Google lo permite; si no, pide un clic. */
+/* Permiso largo: el Worker guarda (cifrado) el permiso de renovación de cada usuario, así el acceso dura hasta que pulses Desconectar. */
+async function gServer(mode, extra = {}) {
+  const r = await fetch(CONFIG.proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await Cloud.auth.currentUser.getIdToken() }, body: JSON.stringify({ mode, ...extra }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(typeof j.error === 'string' ? j.error : 'El servidor respondió ' + r.status); e.status = r.status; throw e }
+  return j;
+}
+const gServerOk = () => CONFIG.proxyUrl && Cloud.on && Cloud.auth.currentUser;
+const gCode = scope => new Promise((ok, no) => google.accounts.oauth2.initCodeClient({
+  client_id: CONFIG.googleClientId, scope: 'openid email ' + scope, ux_mode: 'popup', select_account: true, prompt: 'consent',
+  callback: r => r.error ? no(new Error('Google no dio permiso (' + r.error + ').')) : ok(r.code),
+  error_callback: e => no(new Error(e.type === 'popup_closed' ? 'Cerraste la ventana de Google.' : 'No se pudo abrir la ventana de Google (¿bloqueador de ventanas emergentes?).'))
+}).requestCode());
 async function gToken(force) {
   if (!CONFIG.googleClientId) throw new Error('Falta el Client ID de Google en CONFIG.googleClientId.');
   if (!force && GX.tok && Date.now() < GX.exp - 60e3) return GX.tok;
   await gLoad();
   const scope = Object.keys(S.conn).filter(k => S.conn[k] && GSC[k]).map(k => GSC[k]).join(' ');
   if (!scope) throw new Error('Conecta primero un servicio de Google en Ajustes → Conectores.');
-  return new Promise((ok, no) => google.accounts.oauth2.initTokenClient({
-    client_id: CONFIG.googleClientId, scope: 'openid email ' + scope, login_hint: force ? undefined : (user?.email || undefined), prompt: force ? 'select_account' : '',
-    callback: r => { if (r.error) return no(new Error('Google no dio permiso (' + r.error + ').')); GX.tok = r.access_token; GX.exp = Date.now() + (r.expires_in || 3600) * 1e3; ok(GX.tok) },
-    error_callback: e => no(new Error(e.type === 'popup_closed' ? 'Cerraste la ventana de Google.' : 'No se pudo abrir la ventana de Google (¿bloqueador de ventanas emergentes?).'))
-  }).requestAccessToken());
+  const set = j => { GX.tok = j.access_token; GX.exp = Date.now() + (j.expires_in || 3600) * 1e3; return GX.tok };
+  if (force) {
+    if (gServerOk()) {
+      let largo = true; try { await gServer('g_status') } catch { largo = false }   // ¿el Worker tiene configurados los permisos largos?
+      if (largo) { const j = await gServer('g_connect', { code: await gCode(scope) }); S.settings.glong = true; save(); return set(j) }
+    }
+    S.settings.glong = false; return gTok1('select_account', true);
+  }
+  if (S.settings.glong && gServerOk()) {
+    try { return set(await gServer('g_token')) } catch (e) { if (e.status === 401) { S.settings.glong = false; save() } else throw e }
+  }
+  try { return await gTok1('none') } catch { return gTok1('') }
 }
+setInterval(() => { if (!(gOn() && GX.tok && Date.now() > GX.exp - 8 * 60e3)) return; (S.settings.glong ? gToken() : window.google?.accounts?.oauth2 ? gTok1('none') : Promise.resolve()).catch(() => {}) }, 60e3);
 async function gApi(url, opt = {}, retry = true) {
   const r = await fetch(url, { ...opt, headers: { Authorization: 'Bearer ' + await gToken(), ...(opt.headers || {}) } });
   if (r.status === 401 && retry) { GX.tok = ''; return gApi(url, opt, false) }
@@ -1098,12 +1152,12 @@ function topChunks(text, words, max) {
   const out = []; let len = 0; for (const x of sc) { if (len + x.c.length > max) break; out.push(x); len += x.c.length }
   return out.sort((a, b) => a.i - b.i).map(x => x.c).join('\n…\n') || text.slice(0, max);
 }
-async function gAuto(t, force) {
+async function gAuto(t, force, kindOv) {
   if (!gOn() || !S.conn.drive) { if (force) throw new Error('Conecta Google Drive en Ajustes → Conectores.'); return }
   const verbs = /\b(busca|buscar|encuentra|abre|abrir|lee|léeme|revisa|mira|resume|resúmeme)\b[\s\S]*\b(drive|docs|documento|documentos|hoja|hojas|sheets|google)\b/i.test(t);
   if (!(force || verbs || (S.settings.gall && t.split(/\s+/).length >= 3))) return;
   const words = kwords(t); if (!words.length) return;
-  const kind = /\b(hoja|hojas|sheets|cálculo)\b/i.test(t) ? 'sheet' : /\b(docs|documento|documentos)\b/i.test(t) ? 'doc' : 'all';
+  const kind = kindOv || /\b(hoja|hojas|sheets|cálculo)\b/i.test(t) ? 'sheet' : /\b(docs|documento|documentos)\b/i.test(t) ? 'doc' : 'all';
   try {
     toast('Buscando en todo tu Drive…'); let n = 0, budget = 40000;
     for (const f of (await gFind(words, kind)).slice(0, 8)) {
@@ -1118,6 +1172,7 @@ async function gAuto(t, force) {
 }
 /* Cada persona solo ve su Drive: el permiso vive en la memoria de su navegador y se borra al cerrar sesión */
 function gWipe(revoke) {
+  if (revoke && S.settings.glong && gServerOk()) { gServer('g_revoke').catch(() => {}); S.settings.glong = false }
   if (revoke && GX.tok && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(GX.tok, () => {});
   GX.tok = ''; GX.exp = 0; GX.email = ''; GCACHE.clear(); Object.keys(DL).forEach(k => delete DL[k]);
 }
@@ -1183,10 +1238,12 @@ async function modeYT(t) {
 
 /* Maps: ubicación del navegador (te pide permiso) + OpenStreetMap/OSRM para distancia y pasos + enlace a Google Maps. No necesita la facturación de Google Maps Platform. */
 const here = () => new Promise((ok, no) => navigator.geolocation
-  ? navigator.geolocation.getCurrentPosition(p => ok({ lat: p.coords.latitude, lon: p.coords.longitude }), () => no(new Error('No tengo permiso para ver tu ubicación. Actívala en el candado de la barra de direcciones, o escribe "desde X hasta Y".')), { timeout: 10000 })
+  ? navigator.geolocation.getCurrentPosition(p => ok({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      e => no(new Error(e.code === 1 ? 'No tengo permiso para ver tu ubicación (actívalo en el candado de la barra de direcciones).' : 'Tu navegador no pudo darme la ubicación (Brave y los equipos sin GPS suelen bloquearla).')), { timeout: 10000, maximumAge: 60000 })
   : no(new Error('Tu navegador no da la ubicación.')));
 const geo = async q => {
-  const j = await (await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=es&q=' + encodeURIComponent(q))).json();
+  let j; try { j = await (await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=es&q=' + encodeURIComponent(q))).json() }
+  catch { throw new Error('No pude consultar el mapa. Si usas Brave, desactiva los escudos para esta web e inténtalo de nuevo.') }
   if (!j[0]) throw new Error('No encontré «' + q + '».'); return { lat: +j[0].lat, lon: +j[0].lon, name: j[0].display_name };
 };
 async function modeMap(t) {
@@ -1199,21 +1256,28 @@ async function modeMap(t) {
     return addDoc('Maps', `El usuario busca lugares cercanos: "${q}". No tienes datos de lugares; dile que abra el enlace de Google Maps que se muestra debajo.`);
   }
   toast('Calculando la ruta…');
-  const from = m ? await geo(m[1]) : await here(); if (m) await sleep(1100);   // Nominatim pide 1 consulta por segundo
+  let org = m ? m[1] : 'ubicación actual del usuario', from;
+  if (m) { from = await geo(m[1]); await sleep(1100) }   // Nominatim pide 1 consulta por segundo
+  else {
+    try { from = await here() } catch (e) {
+      const o = await ask({ title: '¿Desde dónde sales?', text: e.message + ' Escribe tu ubicación (calle y ciudad) y calculo la ruta desde ahí.', value: '', ok: 'Calcular ruta' });
+      if (!o) throw new Error('Ruta cancelada.'); from = await geo(o); org = o; await sleep(1100);
+    }
+  }
   const to = await geo(dest);
   let info = '';
   try {
     const rt = (await (await fetch(`https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false&steps=true`)).json()).routes?.[0];
     if (rt) info = `En coche: ${(rt.distance / 1000).toFixed(1)} km, unos ${Math.round(rt.duration / 60)} min.\nPasos principales:\n` + rt.legs[0].steps.filter(s => s.name && s.distance > 150).slice(0, 12).map(s => `- ${s.maneuver.type} ${s.maneuver.modifier || ''} por ${s.name} (${Math.round(s.distance)} m)`).join('\n');
   } catch {}
-  addDoc('Ruta calculada', `Origen: ${m ? m[1] : 'ubicación actual del usuario'}\nDestino: ${to.name}\nModo pedido: ${travel}${travel !== 'driving' ? ' (los datos de abajo son en coche; el enlace de Google Maps calcula el modo correcto)' : ''}\n${info || 'No pude calcular distancia; usa el enlace de Google Maps.'}`);
-  LINKS.push({ title: 'Abrir ruta en Google Maps', url: `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lon}&destination=${to.lat},${to.lon}&travelmode=${travel}`, sub: `${m ? m[1] : 'Tu ubicación'} → ${dest}` });
+  addDoc('Ruta calculada', `Origen: ${org}\nDestino: ${to.name}\nModo pedido: ${travel}${travel !== 'driving' ? ' (los datos de abajo son en coche; el enlace de Google Maps calcula el modo correcto)' : ''}\n${info || 'No pude calcular distancia; usa el enlace de Google Maps.'}`);
+  LINKS.push({ title: 'Abrir ruta en Google Maps', url: `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lon}&destination=${to.lat},${to.lon}&travelmode=${travel}`, sub: `${org} → ${dest}` });
 }
 
 async function runMode(t) {
   LINKS.length = 0;
   try {
-    if (mode === 'drive') await gAuto(t, true); else if (mode === 'mail') await modeMail(t); else if (mode === 'yt') await modeYT(t); else if (mode === 'map') await modeMap(t); else if (!mode) await gAuto(t);
+    if (mode === 'drive') await gAuto(t, true); else if (mode === 'mail') await modeMail(t); else if (mode === 'yt') await modeYT(t); else if (mode === 'map') await modeMap(t); else if (mode === 'docs') await gAuto(t, true, 'doc'); else if (mode === 'sheets') await gAuto(t, true, 'sheet'); else if (!mode) await gAuto(t);
     return true;
   } catch (e) { toast(e.message); return false }
 }
