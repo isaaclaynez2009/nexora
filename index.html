@@ -2,7 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1A3F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nexora">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Nexora</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230A1A3F'/><path d='M9 23V9l14 14V9' stroke='%2322D3EE' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -211,6 +218,38 @@ html[data-theme=dark][data-pal=oceano]{--bg:#070F26;--card:#0E1B40;--line:#1E2F6
 html[data-theme=dark][data-pal=naranja]{--bg:#150C06;--card:#22140B;--line:#3D2514;--side:#0F0803;--ink:#FFF1E6;--mut:#C9A98F}
 html[data-theme=dark][data-pal=bosque]{--bg:#06130C;--card:#0D2216;--line:#1B3F2A;--side:#040E08;--ink:#E9FBEF;--mut:#8FBFA1}
 #thm{color:#cfdcff;padding:7px 9px;border-radius:8px}#thm:hover{background:#ffffff1a}
+
+/* ===== v4: iPhone y móviles (zonas seguras, teclado, gestos táctiles) ===== */
+html{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#scrim{display:none}
+@media(max-width:800px){
+ html,body{height:100%}
+ #app{height:100vh;height:100dvh}
+ #welcome,#auth{min-height:100dvh}
+ input,textarea,select{font-size:16px!important}   /* evita el zoom automático de iOS al escribir */
+ aside{width:min(84vw,330px);inset:0 auto 0 0;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom));box-shadow:0 0 40px #0008}
+ aside.open + #scrim{display:block;position:fixed;inset:0;background:#050c1e99;z-index:9}
+ .top{padding:12px 14px}
+ #msgs{padding:16px 14px}
+ .comp{padding:8px 10px calc(10px + env(safe-area-inset-bottom))}
+ .box{position:relative;border-radius:18px}
+ .tools{flex-wrap:nowrap;overflow-x:auto;padding:2px 52px 2px 0;scrollbar-width:none}
+ .tools::-webkit-scrollbar{display:none}
+ .tools .chip{flex:none;white-space:nowrap;min-height:36px}
+ #send{position:absolute;right:8px;bottom:8px;margin:0;width:40px;height:40px}
+ .ci .ac,.ci .ac{display:flex}
+ .ac button{padding:8px}
+ .empty{margin-top:4vh}
+ .sug button{width:100%}
+ .bub{max-width:94%}
+ .modal{max-height:calc(100dvh - 24px)}
+ .panel{padding:24px}
+ .hero h1{font-size:clamp(34px,10vw,52px)}
+}
+@media(hover:none){.ci .ac{display:flex}}
+#instala{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:25;background:var(--navy);color:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 12px 40px #0006;display:flex;gap:12px;align-items:flex-start;font-size:14px}
+#instala b{display:block;margin-bottom:2px}#instala button{margin-left:auto;color:#fff;font-size:20px;line-height:1;padding:0 4px}
 </style>
 </head>
 <body>
@@ -267,6 +306,7 @@ html[data-theme=dark][data-pal=bosque]{--bg:#06130C;--card:#0D2216;--line:#1B3F2
       <button id="thm" title="Cambiar entre modo claro y oscuro" aria-label="Cambiar tema"></button><button id="openSet" title="Perfil y ajustes" aria-label="Perfil y ajustes"><i data-ic="sliders" data-s="20"></i></button></div>
     <button id="out"><i data-ic="logout" data-s="16"></i> Cerrar sesión</button>
   </aside>
+  <div id="scrim"></div>
   <main>
     <div class="top"><button id="menu" aria-label="Menú"><i data-ic="menu" data-s="22"></i></button><h3 id="title">Nuevo chat</h3><button id="exp" title="Descargar este chat como archivo .md">Exportar</button></div>
     <div id="msgs"><div class="wrap" id="wrap"></div></div>
@@ -304,7 +344,7 @@ html[data-theme=dark][data-pal=bosque]{--bg:#06130C;--card:#0D2216;--line:#1B3F2
 const CONFIG = {
   firebase: { apiKey: "AIzaSyDbNl-hFXLJRpQg_c0CB8ues1cZ4WjoN4g", authDomain: "nexora-67635.firebaseapp.com", projectId: "nexora-67635", appId: "1:442376896786:web:9252d12d1bdb1c27ef73cb" },
   proxyUrl: "https://nexoria-ia.isaaclaynezgonzaleztrabajo.workers.dev",              // URL de tu Cloudflare Worker / Function    → Fase 3
-  googleClientId: ""         // OAuth Client ID para conectores           → Fase 5
+  googleClientId: "442376896786-ke0s4hfll4k56gq3if0f15pqut82nu1q.apps.googleusercontent.com"         // OAuth Client ID para conectores           → Fase 5
 };
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -413,7 +453,7 @@ const Cloud = {
   },
   async google() {
     if (!this.on) return toast('Conectando con Firebase… inténtalo en unos segundos.');
-    try { await this.Au.signInWithPopup(this.auth, new this.Au.GoogleAuthProvider()) } catch (e) { $('#aErr').textContent = this.err(e) }
+    try { await this.Au.signInWithPopup(this.auth, new this.Au.GoogleAuthProvider()) } catch (e) { $('#aErr').textContent = this.err(e) + (navigator.standalone ? ' En la app del iPhone, Google a veces no abre su ventana: entra con tu correo y contraseña.' : '') }
   },
   async email(mode, email, pass, name) {
     if (!this.on) return toast('Conectando con Firebase… inténtalo en unos segundos.');
@@ -1179,6 +1219,14 @@ async function runMode(t) {
 }
 
 $('#thm').onclick = () => { S.settings.theme = S.settings.theme === 'dark' ? 'light' : 'dark'; save(); applyTheme() };
+$('#scrim').onclick = () => $('#side').classList.remove('open');
+/* Instalar como app (PWA): service worker + aviso para iPhone */
+if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (esIOS && !navigator.standalone && !LS.get('nx_inst', false)) setTimeout(() => {
+  document.body.insertAdjacentHTML('beforeend', '<div id="instala" role="dialog"><div><b>Instala Nexora en tu iPhone</b>Pulsa Compartir y luego «Añadir a pantalla de inicio». Se abrirá como una app, sin barras del navegador.</div><button aria-label="Cerrar">×</button></div>');
+  $('#instala button').onclick = () => { LS.set('nx_inst', true); $('#instala').remove() };
+}, 4000);
 $('#send').onclick = sendMsg;
 $('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } };
 $('#inp').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' };
