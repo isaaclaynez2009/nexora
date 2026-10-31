@@ -184,6 +184,8 @@ html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8A
 .dc{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;font-size:13px}.dc button{color:var(--mut);font-size:15px}
 #exp{font-size:13px;color:var(--mut);padding:6px 10px;border-radius:8px}#exp:hover{background:var(--bg);color:var(--ink)}
 .chip.rec{background:#D93651;color:#fff;border-color:#D93651}
+.gen{display:block;max-width:100%;width:420px;border-radius:14px;margin-top:8px;border:1px solid var(--line)}
+.ed{align-self:center;font-size:12px;color:var(--mut);opacity:.55;padding:3px 8px;border-radius:8px}.ed:hover{opacity:1;background:var(--bg)}
 </style>
 </head>
 <body>
@@ -250,7 +252,7 @@ html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8A
         <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Archivo<input type="file" id="file" accept="image/*,.txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.log,.yml,.yaml,.sql" hidden multiple></label>
         <button class="chip on" id="tSearch"><i data-ic="globe" data-s="16"></i> Buscar en la web</button>
         <button class="chip" id="tThink"><i data-ic="brain" data-s="16"></i> Pensar a fondo</button>
-        <button class="chip" id="mic" type="button">Voz</button><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
+        <button class="chip" id="tImg" type="button" title="Nexora dibuja lo que le pidas">Crear imagen</button><button class="chip" id="mic" type="button">Voz</button><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
       </div>
     </div></div>
   </main>
@@ -324,7 +326,7 @@ let think = false, search = true, busy = false, authMode = 'login';
 const key = () => 'nx_data_' + (user?.email || 'x');
 const save = () => Cloud.on ? Cloud.save() : LS.set(key(), S);
 function load() { S = Object.assign(S, LS.get(key(), {})); applyTheme() }
-function applyTheme() { document.documentElement.dataset.theme = S.settings.theme; document.documentElement.dataset.pal = S.settings.pal || 'oceano' }
+function applyTheme() { document.documentElement.dataset.theme = S.settings.theme; document.documentElement.dataset.pal = S.settings.pal || 'oceano'; document.body.style.fontSize = ({ pequeña: '14px', grande: '17px' })[S.settings.font] || '' }
 
 /* ---------- Nube (Firebase) · Fase 2 ----------
    Solo se activa si CONFIG.firebase tiene datos. Estructura en Firestore:
@@ -595,16 +597,20 @@ function md(t) {
 function msgHTML(m, i, arr) {
   if (m.role === 'user') {
     const im = (IMGS[m.id] || []).filter(d => d.startsWith('data:image/')).map(d => `<img src="${d}" alt="Imagen adjunta">`).join('');
+    const ed = typeof i === 'number' && arr.findLastIndex(x => x.role === 'user') === i ? `<button class="ed" data-act="edit" data-i="${i}">Editar</button>` : '';
     const nota = !im && m.n ? `<div style="opacity:.8;font-size:13px;display:flex;gap:6px;align-items:center">${ic('image', 14)} ${m.n} imagen(es) adjunta(s) · no se guardan al recargar</div>` : '';
-    return `<div class="m u"><div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${(m.docs || []).map(n => `<div style="font-size:13px;opacity:.85">${esc(n)}</div>`).join('')}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
+    return `<div class="m u">${ed}<div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${(m.docs || []).map(n => `<div style="font-size:13px;opacity:.85">${esc(n)}</div>`).join('')}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
   }
   const nt = m.notice ? `<div class="nt">${esc(m.notice)}</div>` : '';
   const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
   // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
   const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
-  const act = typeof i === 'number' ? `<div class="act"><button data-act="copy" data-i="${i}">Copiar</button><button data-act="say" data-i="${i}">Leer</button>${i === arr.length - 1 ? '<button data-act="regen">Repetir</button>' : ''}</div>` : '';
+  const gi = GENIMG[m.id] || m.img || '';
+  const gen = gi.startsWith('data:image/') ? `<img class="gen" src="${gi}" alt="Imagen creada por Nexora">` : '';
+  const dl = gen ? `<button data-act="dl" data-i="${i}">Descargar</button>` : '';
+  const act = typeof i === 'number' ? `<div class="act"><button data-act="copy" data-i="${i}">Copiar</button><button data-act="say" data-i="${i}">Leer</button>${dl}${i === arr.length - 1 ? '<button data-act="regen">Repetir</button>' : ''}</div>` : '';
   const ent = m.entry ? `<iframe class="sx" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${esc(m.entry)}" title="Sugerencias de búsqueda de Google"></iframe>` : '';
-  return `<div class="m a"><span class="av2">${logo(26)}</span><div class="bub">${nt}${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}${act}</div></div>`;
+  return `<div class="m a"><span class="av2">${logo(26)}</span><div class="bub">${nt}${th}${md(m.text)}${gen}${src ? `<div class="src">${src}</div>` : ''}${ent}${act}</div></div>`;
 }
 function renderMsgs() {
   const c = chat(), w = $('#wrap');
@@ -633,6 +639,7 @@ function systemPrompt() {
   if (S.profile.about) s += `\nSobre el usuario: ${S.profile.about}`;
   if (S.profile.style) s += `\nInstrucciones del usuario: ${S.profile.style}`;
   if (S.memory.length) s += `\nRecuerdos:\n- ` + S.memory.join('\n- ');
+  const L = { corta: 'Responde de forma breve y directa.', detallada: 'Responde con detalle y ejemplos.' }[S.settings.len]; if (L) s += '\n' + L;
   return s;
 }
 
@@ -640,7 +647,7 @@ function systemPrompt() {
    Se reducen a 1280 px para ocupar poco. Solo viven en memoria: en la nube se guarda
    únicamente cuántas imágenes tenía el mensaje (Firestore limita cada chat a 1 MiB). */
 let pending = [];
-const IMGS = {};
+const IMGS = {}, GENIMG = {};   // GENIMG: imágenes creadas por Nexora en alta calidad (solo en memoria)
 function drawThumbs() {
   $('#thumbs').innerHTML = pending.map(x => `<div class="pv"><img src="${x.data}" alt="Imagen adjunta"><button data-r="${x.id}" aria-label="Quitar imagen">×</button></div>`).join('')
     + docs.map(d => `<div class="dc">${esc(d.name)}<button data-r="${d.id}" aria-label="Quitar archivo">×</button></div>`).join('');
@@ -684,10 +691,11 @@ async function askAI(c, onTick) {
   }
   if (!CONFIG.firebase || !Cloud.on || !Cloud.auth.currentUser) throw new Error('Inicia sesión con tu cuenta para usar la IA.');
   const token = await Cloud.auth.currentUser.getIdToken();
+  if (wantsImage(c.msgs.at(-1).text)) return genImage(c.msgs.at(-1).text, token);
   ctrl = new AbortController();
   const r = await fetch(CONFIG.proxyUrl, { signal: ctrl.signal,
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-    body: JSON.stringify({ system: systemPrompt() + (c.msgs.length === 1 ? TITLE_RULE : ''), messages: c.msgs.map(m => ({ role: m.role, content: m.text + (DOCS[m.id] || []).map(d => `\n\n[Archivo: ${d.name}]\n${d.text}`).join(''), images: IMGS[m.id] || [] })), think, search })
+    body: JSON.stringify({ system: systemPrompt() + (c.msgs.length === 1 ? TITLE_RULE : ''), messages: c.msgs.map(m => ({ role: m.role, content: m.text + (DOCS[m.id] || []).map(d => `\n\n[Archivo: ${d.name}]\n${d.text}`).join(''), images: IMGS[m.id] || [] })), think, search, temp: ({ baja: 0.3, alta: 1.2 })[S.settings.temp] })
   });
   if (!r.ok) {
     const raw = await r.text().catch(() => ''); let det = ''; try { det = JSON.parse(raw).error?.message || '' } catch { det = raw }
@@ -723,6 +731,7 @@ let live = null;   // respuesta en curso: { id del chat, o: texto parcial }
 const typingHTML = () => `<div id="typing">${live.o && (stripTitle(live.o.text) || live.o.reasoning) ? msgHTML({ role: 'assistant', text: stripTitle(live.o.text), notice: live.o.notice, reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
 async function sendMsg() {
   let t = $('#inp').value.trim(); if (!t && !pending.length && !docs.length) return;
+  const rm = /^\s*recuerda que\s+(.{3,300})/i.exec(t); if (rm && !busy) { S.memory.push(rm[1].trim()); toast('Anotado: lo recordaré') }
   if (busy) return toast('Nexora aún está respondiendo. Espera un momento.');
   if (!t) t = '(imagen)';
   if (!chat()) newChat();
@@ -745,14 +754,32 @@ async function sendMsg() {
     const r = await askAI(c, tick);
     const mt = (r.text || '').match(/\[\[titulo:\s*([^\]]{2,80})\]\]/i);
     if (mt && S.chats.includes(c) && c.msgs.length === 1) c.title = mt[1].trim().replace(/^./, ch => ch.toUpperCase()).slice(0, 50);
-    reply = { role: 'assistant', text: stripTitle(r.text || '') || '(sin respuesta)', notice: r.notice || '', reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' };
+    reply = { id: uid(), img: r.img || '', role: 'assistant', text: stripTitle(r.text || '') || '(sin respuesta)', notice: r.notice || '', reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' }; if (r.full) GENIMG[reply.id] = r.full;
   } catch (e) { reply = { role: 'assistant', text: e.name === 'AbortError' ? '*(Respuesta detenida.)*' : 'No pude responder: ' + e.message } }
   live = null; busy = false; $('#send').disabled = false; $('#stop').classList.add('hidden');
   // Si borraste el chat mientras Nexora respondía, la respuesta se descarta
   if (S.chats.includes(c)) { c.msgs.push(reply); c.ts = Date.now(); save() }
   renderAll();
 }
-let ctrl = null;
+let ctrl = null, imageOn = false;
+$('#tImg').onclick = e => { imageOn = !imageOn; e.currentTarget.classList.toggle('on', imageOn) };
+const wantsImage = t => imageOn || /^\s*(dibuja|dibújame|genera|créame|creame|crea|hazme|haz|diseña)\s+(me\s+)?(una?|el|la)?\s*(imagen|foto|fotografía|dibujo|ilustración|logo|póster|poster|retrato|paisaje)/i.test(t);
+function shrink(src, max, q) {
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); res(cv.toDataURL('image/jpeg', q)) };
+    im.onerror = () => res(''); im.src = src;
+  });
+}
+async function genImage(text, token) {
+  ctrl = new AbortController();
+  const r = await fetch(CONFIG.proxyUrl, { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ mode: 'image', prompt: text }) });
+  if (!r.ok) { let d = ''; try { const e = JSON.parse(await r.text()).error; d = typeof e === 'string' ? e : e?.message || '' } catch {} throw new Error(d || 'El servidor respondió ' + r.status) }
+  const j = await r.json();
+  // Se guarda una versión pequeña en el chat (límite de 1 MiB por chat) y la grande solo en memoria
+  const keep = chat().msgs.filter(m => m.img).length < 12 ? await shrink(j.image, 512, .6) : '';
+  return { text: 'Aquí tienes tu imagen. Puedes descargarla o pedirme cambios.', reasoning: '', sources: [], entry: '', notice: '', img: keep, full: j.image };
+}
 $('#stop').onclick = () => ctrl?.abort();
 
 /* Chats agrupados por fecha en la barra lateral */
@@ -779,6 +806,11 @@ $('#wrap').addEventListener('click', e => {
   else if (a === 'say' && m) {
     if (!('speechSynthesis' in window)) return toast('Tu navegador no puede leer en voz alta.');
     speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(m.text.replace(/[*#`|]/g, '')); u.lang = 'es-ES'; speechSynthesis.speak(u);
+  } else if (a === 'dl' && m) { const u = GENIMG[m.id] || m.img, l = document.createElement('a'); l.href = u; l.download = 'nexora-imagen.jpg'; l.click() }
+  else if (a === 'edit' && m && !busy) {
+    const c = chat(), k = +b.dataset.i; c.msgs.length = k;
+    $('#inp').value = m.text === '(imagen)' ? '' : m.text; pending = (IMGS[m.id] || []).map(d => ({ id: uid(), data: d })); docs = DOCS[m.id] ? [...DOCS[m.id]] : [];
+    drawThumbs(); save(); renderAll(); $('#inp').focus();
   } else if (a === 'regen') regen();
 });
 
@@ -853,8 +885,14 @@ function tab(t) {
   if (t === 's') {
     mb.innerHTML = `<label class="field">Tema<select id="sT"><option value="light">Claro</option><option value="dark">Oscuro</option></select></label>
     <div class="field">Paleta de colores<div class="pals">${PALS.map(q => `<button class="pal ${(S.settings.pal || 'oceano') === q[0] ? 'on' : ''}" data-p="${q[0]}" title="${q[1]}" aria-label="${q[1]}" style="background:linear-gradient(135deg,${q[2]},${q[3]})"></button>`).join('')}</div></div>
+    <label class="field">Creatividad de las respuestas<select id="sC"><option value="baja">Precisa</option><option value="normal">Equilibrada</option><option value="alta">Creativa</option></select></label><label class="field">Longitud de las respuestas<select id="sL"><option value="corta">Cortas</option><option value="normal">Normales</option><option value="detallada">Detalladas</option></select></label><label class="field">Tamaño de letra<select id="sF"><option value="pequeña">Pequeña</option><option value="normal">Normal</option><option value="grande">Grande</option></select></label><button class="btn ghost" id="sA" style="margin-bottom:12px">Borrar todos mis chats</button>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><button class="btn ghost" id="sX">Exportar mis datos</button><button class="btn ghost" id="sD" style="color:#D93651">Eliminar mi cuenta y datos</button></div>`;
     $('.pals').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return; S.settings.pal = b.dataset.p; save(); applyTheme(); tab('s') };
+    [['sC', 'temp'], ['sL', 'len'], ['sF', 'font']].forEach(([id, k]) => { $('#' + id).value = S.settings[k] || 'normal'; $('#' + id).onchange = e => { S.settings[k] = e.target.value; save(); applyTheme() } });
+    $('#sA').onclick = async () => {
+      if (!await ask({ title: '¿Borrar todos tus chats?', text: 'Se eliminarán todas las conversaciones. Tu perfil y tu memoria se quedan. No se puede deshacer.', ok: 'Borrar chats', danger: true })) return;
+      S.chats = []; S.cur = null; $('#ov').classList.add('hidden'); newChat(); toast('Chats borrados');
+    };
     $('#sT').value = S.settings.theme; $('#sT').onchange = e => { S.settings.theme = e.target.value; save(); applyTheme() };
     $('#sX').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); a.download = 'nexora-datos.json'; a.click() };
     $('#sD').onclick = async () => {
