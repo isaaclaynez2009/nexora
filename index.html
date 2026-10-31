@@ -180,6 +180,10 @@ html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8A
  #menu{display:block}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.act{display:flex;gap:4px;margin-top:8px}.act button{font-size:12px;color:var(--mut);padding:3px 8px;border-radius:8px}.act button:hover{background:var(--bg);color:var(--ink)}
+.dc{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;font-size:13px}.dc button{color:var(--mut);font-size:15px}
+#exp{font-size:13px;color:var(--mut);padding:6px 10px;border-radius:8px}#exp:hover{background:var(--bg);color:var(--ink)}
+.chip.rec{background:#D93651;color:#fff;border-color:#D93651}
 </style>
 </head>
 <body>
@@ -237,16 +241,16 @@ html[data-pal=grafito]{--navy:#16181D;--navy2:#2A2F3A;--navy3:#3F4756;--a1:#7C8A
     <button id="out"><i data-ic="logout" data-s="16"></i> Cerrar sesión</button>
   </aside>
   <main>
-    <div class="top"><button id="menu" aria-label="Menú"><i data-ic="menu" data-s="22"></i></button><h3 id="title">Nuevo chat</h3></div>
+    <div class="top"><button id="menu" aria-label="Menú"><i data-ic="menu" data-s="22"></i></button><h3 id="title">Nuevo chat</h3><button id="exp" title="Descargar este chat como archivo .md">Exportar</button></div>
     <div id="msgs"><div class="wrap" id="wrap"></div></div>
     <div class="comp"><div class="box">
       <div id="thumbs"></div>
       <textarea id="inp" rows="1" placeholder="Escribe tu mensaje a Nexora"></textarea>
       <div class="tools">
-        <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Imagen<input type="file" id="file" accept="image/*" hidden multiple></label>
+        <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Archivo<input type="file" id="file" accept="image/*,.txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.log,.yml,.yaml,.sql" hidden multiple></label>
         <button class="chip on" id="tSearch"><i data-ic="globe" data-s="16"></i> Buscar en la web</button>
         <button class="chip" id="tThink"><i data-ic="brain" data-s="16"></i> Pensar a fondo</button>
-        <button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
+        <button class="chip" id="mic" type="button">Voz</button><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
       </div>
     </div></div>
   </main>
@@ -546,7 +550,7 @@ $('#list').onclick = async e => {
   else { S.cur = c.id; pruneEmpty(); $('#side').classList.remove('open') }
   save(); if (!S.chats.length) return newChat(); renderAll();
 };
-$('#q').oninput = renderList;
+$('#q').oninput = () => renderList();
 function pruneEmpty() { S.chats = S.chats.filter(c => c.msgs.length || c.id === S.cur) }
 $('#newChat').onclick = () => {
   $('#side').classList.remove('open');
@@ -588,18 +592,19 @@ function md(t) {
   }
   return out.join('').replace(/\u0000(\d+)\u0000/g, (_, n) => code[+n]);
 }
-function msgHTML(m) {
+function msgHTML(m, i, arr) {
   if (m.role === 'user') {
     const im = (IMGS[m.id] || []).filter(d => d.startsWith('data:image/')).map(d => `<img src="${d}" alt="Imagen adjunta">`).join('');
     const nota = !im && m.n ? `<div style="opacity:.8;font-size:13px;display:flex;gap:6px;align-items:center">${ic('image', 14)} ${m.n} imagen(es) adjunta(s) · no se guardan al recargar</div>` : '';
-    return `<div class="m u"><div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
+    return `<div class="m u"><div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${(m.docs || []).map(n => `<div style="font-size:13px;opacity:.85">${esc(n)}</div>`).join('')}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
   }
   const nt = m.notice ? `<div class="nt">${esc(m.notice)}</div>` : '';
   const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
   // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
   const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
+  const act = typeof i === 'number' ? `<div class="act"><button data-act="copy" data-i="${i}">Copiar</button><button data-act="say" data-i="${i}">Leer</button>${i === arr.length - 1 ? '<button data-act="regen">Repetir</button>' : ''}</div>` : '';
   const ent = m.entry ? `<iframe class="sx" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${esc(m.entry)}" title="Sugerencias de búsqueda de Google"></iframe>` : '';
-  return `<div class="m a"><span class="av2">${logo(26)}</span><div class="bub">${nt}${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}</div></div>`;
+  return `<div class="m a"><span class="av2">${logo(26)}</span><div class="bub">${nt}${th}${md(m.text)}${src ? `<div class="src">${src}</div>` : ''}${ent}${act}</div></div>`;
 }
 function renderMsgs() {
   const c = chat(), w = $('#wrap');
@@ -637,7 +642,17 @@ function systemPrompt() {
 let pending = [];
 const IMGS = {};
 function drawThumbs() {
-  $('#thumbs').innerHTML = pending.map(x => `<div class="pv"><img src="${x.data}" alt="Imagen adjunta"><button data-r="${x.id}" aria-label="Quitar imagen">${ic('close', 12)}</button></div>`).join('');
+  $('#thumbs').innerHTML = pending.map(x => `<div class="pv"><img src="${x.data}" alt="Imagen adjunta"><button data-r="${x.id}" aria-label="Quitar imagen">×</button></div>`).join('')
+    + docs.map(d => `<div class="dc">${esc(d.name)}<button data-r="${d.id}" aria-label="Quitar archivo">×</button></div>`).join('');
+}
+let docs = []; const DOCS = {};
+const TXT = /\.(txt|md|csv|json|js|ts|py|html|css|xml|log|yml|yaml|sql)$/i;
+async function addFile(f) {
+  if (/^image\//.test(f.type)) return addImage(f);
+  if (!TXT.test(f.name) && !f.type.startsWith('text/')) return toast('Solo puedo leer imágenes y archivos de texto o código.');
+  if (f.size > 60000) return toast('Ese archivo pesa demasiado (máximo 60 KB).');
+  if (docs.length >= 3) return toast('Máximo 3 archivos de texto por mensaje.');
+  try { docs.push({ id: uid(), name: f.name.slice(0, 40), text: await f.text() }); drawThumbs() } catch { toast('No pude leer ese archivo.') }
 }
 async function addImage(file) {
   if (!file || !/^image\//.test(file.type)) return toast('Por ahora solo se pueden adjuntar imágenes.');
@@ -649,13 +664,13 @@ async function addImage(file) {
     pending.push({ id: uid(), data: cv.toDataURL('image/jpeg', .85) }); drawThumbs();
   } catch { toast('No pude leer esa imagen.') }
 }
-$('#thumbs').onclick = e => { const r = e.target.closest('[data-r]')?.dataset.r; if (r) { pending = pending.filter(x => x.id !== r); drawThumbs() } };
+$('#thumbs').onclick = e => { const r = e.target.closest('[data-r]')?.dataset.r; if (r) { pending = pending.filter(x => x.id !== r); docs = docs.filter(x => x.id !== r); drawThumbs() } };
 $('#inp').addEventListener('paste', e => {
   const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
   if (fs.length) { e.preventDefault(); fs.forEach(addImage) }   // si no hay imagen, el pegado de texto es normal
 });
 $('.box').addEventListener('dragover', e => e.preventDefault());
-$('.box').addEventListener('drop', e => { e.preventDefault(); [...e.dataTransfer.files].forEach(addImage) });
+$('.box').addEventListener('drop', e => { e.preventDefault(); [...e.dataTransfer.files].forEach(addFile) });
 
 /* ---------- Envío y respuesta en streaming (Gemini a través del proxy) ---------- */
 async function askAI(c, onTick) {
@@ -669,9 +684,10 @@ async function askAI(c, onTick) {
   }
   if (!CONFIG.firebase || !Cloud.on || !Cloud.auth.currentUser) throw new Error('Inicia sesión con tu cuenta para usar la IA.');
   const token = await Cloud.auth.currentUser.getIdToken();
-  const r = await fetch(CONFIG.proxyUrl, {
+  ctrl = new AbortController();
+  const r = await fetch(CONFIG.proxyUrl, { signal: ctrl.signal,
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-    body: JSON.stringify({ system: systemPrompt() + (c.msgs.length === 1 ? TITLE_RULE : ''), messages: c.msgs.map(m => ({ role: m.role, content: m.text, images: IMGS[m.id] || [] })), think, search })
+    body: JSON.stringify({ system: systemPrompt() + (c.msgs.length === 1 ? TITLE_RULE : ''), messages: c.msgs.map(m => ({ role: m.role, content: m.text + (DOCS[m.id] || []).map(d => `\n\n[Archivo: ${d.name}]\n${d.text}`).join(''), images: IMGS[m.id] || [] })), think, search })
   });
   if (!r.ok) {
     const raw = await r.text().catch(() => ''); let det = ''; try { det = JSON.parse(raw).error?.message || '' } catch { det = raw }
@@ -680,6 +696,7 @@ async function askAI(c, onTick) {
   }
   // Lee el flujo SSE de Gemini: cada "data:" trae un trozo de texto, de razonamiento o metadatos de búsqueda
   const out = { text: '', notice: r.headers.get('X-Nexora-Search') === 'off' ? 'La búsqueda web no estaba disponible ahora, así que respondo sin ella.' : '', reasoning: '', sources: [], entry: '' };
+  const hs = r.headers.get('X-Nexora-Sources'); if (hs) { try { out.sources = JSON.parse(decodeURIComponent(escape(atob(hs)))) } catch {} }
   const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
   try {
     for (;;) {
@@ -699,20 +716,21 @@ async function askAI(c, onTick) {
         onTick(out);
       }
     }
-  } catch { if (out.text) out.text += '\n\n*(respuesta interrumpida)*'; else throw new Error('Se cortó la conexión. Inténtalo de nuevo.') }
+  } catch (e) { if (e.name === 'AbortError') { if (!out.text) throw e } else if (out.text) out.text += '\n\n*(respuesta interrumpida)*'; else throw new Error('Se cortó la conexión. Inténtalo de nuevo.') }
   return out;
 }
 let live = null;   // respuesta en curso: { id del chat, o: texto parcial }
 const typingHTML = () => `<div id="typing">${live.o && (stripTitle(live.o.text) || live.o.reasoning) ? msgHTML({ role: 'assistant', text: stripTitle(live.o.text), notice: live.o.notice, reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
 async function sendMsg() {
-  let t = $('#inp').value.trim(); if (!t && !pending.length) return;
+  let t = $('#inp').value.trim(); if (!t && !pending.length && !docs.length) return;
   if (busy) return toast('Nexora aún está respondiendo. Espera un momento.');
   if (!t) t = '(imagen)';
   if (!chat()) newChat();
-  const c = chat(); busy = true; $('#send').disabled = true;
-  const mid = uid(); c.msgs.push({ id: mid, role: 'user', text: t, n: pending.length }); c.ts = Date.now();
+  const c = chat(); busy = true; $('#send').disabled = true; $('#stop').classList.remove('hidden');
+  const mid = uid(); c.msgs.push({ id: mid, role: 'user', text: t, n: pending.length, docs: docs.map(d => d.name) }); c.ts = Date.now();
   if (pending.length) IMGS[mid] = pending.map(x => x.data);
-  pending = []; drawThumbs();
+  if (docs.length) DOCS[mid] = docs;
+  pending = []; docs = []; drawThumbs();
   if (c.msgs.length === 1) c.title = t === '(imagen)' ? 'Imagen' : shortTitle(t);
   live = { id: c.id, o: null };
   $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
@@ -728,18 +746,76 @@ async function sendMsg() {
     const mt = (r.text || '').match(/\[\[titulo:\s*([^\]]{2,80})\]\]/i);
     if (mt && S.chats.includes(c) && c.msgs.length === 1) c.title = mt[1].trim().replace(/^./, ch => ch.toUpperCase()).slice(0, 50);
     reply = { role: 'assistant', text: stripTitle(r.text || '') || '(sin respuesta)', notice: r.notice || '', reasoning: r.reasoning || '', sources: r.sources || [], entry: r.entry || '' };
-  } catch (e) { reply = { role: 'assistant', text: 'No pude responder: ' + e.message } }
-  live = null; busy = false; $('#send').disabled = false;
+  } catch (e) { reply = { role: 'assistant', text: e.name === 'AbortError' ? '*(Respuesta detenida.)*' : 'No pude responder: ' + e.message } }
+  live = null; busy = false; $('#send').disabled = false; $('#stop').classList.add('hidden');
   // Si borraste el chat mientras Nexora respondía, la respuesta se descarta
   if (S.chats.includes(c)) { c.msgs.push(reply); c.ts = Date.now(); save() }
   renderAll();
 }
+let ctrl = null;
+$('#stop').onclick = () => ctrl?.abort();
+
+/* Chats agrupados por fecha en la barra lateral */
+const _rl = renderList;
+renderList = () => {
+  _rl(); const n = new Date(), d0 = new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime(); let last = '';
+  [...$('#list').querySelectorAll('.ci')].forEach(r => {
+    const c = S.chats.find(x => x.id === r.dataset.id); if (!c) return;
+    const g = c.pinned ? 'Fijados' : c.ts >= d0 ? 'Hoy' : c.ts >= d0 - 864e5 ? 'Ayer' : c.ts >= d0 - 6 * 864e5 ? 'Últimos 7 días' : 'Antes';
+    if (g !== last) { r.insertAdjacentHTML('beforebegin', `<div class="lbl">${g}</div>`); last = g }
+  });
+};
+
+/* Copiar, leer en voz alta y repetir la última respuesta */
+function regen() {
+  const c = chat(); if (!c || busy || c.msgs.at(-1)?.role !== 'assistant') return;
+  c.msgs.pop(); const u = c.msgs.pop(); if (!u) return;
+  $('#inp').value = u.text === '(imagen)' ? '' : u.text;
+  pending = (IMGS[u.id] || []).map(d => ({ id: uid(), data: d })); docs = DOCS[u.id] ? [...DOCS[u.id]] : []; drawThumbs(); sendMsg();
+}
+$('#wrap').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return; const m = chat()?.msgs[+b.dataset.i], a = b.dataset.act;
+  if (a === 'copy' && m) { navigator.clipboard.writeText(m.text); toast('Copiado') }
+  else if (a === 'say' && m) {
+    if (!('speechSynthesis' in window)) return toast('Tu navegador no puede leer en voz alta.');
+    speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(m.text.replace(/[*#`|]/g, '')); u.lang = 'es-ES'; speechSynthesis.speak(u);
+  } else if (a === 'regen') regen();
+});
+
+/* Exportar el chat actual como .md */
+$('#exp').onclick = () => {
+  const c = chat(); if (!c || !c.msgs.length) return toast('Este chat está vacío.');
+  const md = `# ${c.title}\n\n` + c.msgs.map(m => `**${m.role === 'user' ? 'Tú' : 'Nexora'}:** ${m.text}`).join('\n\n') + '\n';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+  a.download = (c.title || 'chat').replace(/[^\w\- áéíóúñ]+/gi, '').trim().slice(0, 40) + '.md'; a.click();
+};
+
+/* Dictado por voz */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let rec = null;
+if (!SR) $('#mic').classList.add('hidden');
+$('#mic').onclick = () => {
+  if (rec) return rec.stop();
+  rec = new SR(); rec.lang = 'es-ES'; rec.interimResults = true; rec.continuous = true;
+  const base = $('#inp').value ? $('#inp').value + ' ' : '';
+  rec.onresult = e => { $('#inp').value = base + [...e.results].map(r => r[0].transcript).join(''); $('#inp').dispatchEvent(new Event('input')) };
+  rec.onend = () => { rec = null; $('#mic').classList.remove('rec') };
+  rec.onerror = () => toast('No pude usar el micrófono. Revisa el permiso del navegador.');
+  rec.start(); $('#mic').classList.add('rec');
+};
+
+/* Atajos: Ctrl+K busca chats · Alt+N chat nuevo */
+document.addEventListener('keydown', e => {
+  if ($('#app').classList.contains('hidden')) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#side').classList.add('open'); $('#q').focus() }
+  if (e.altKey && e.key.toLowerCase() === 'n') { e.preventDefault(); $('#newChat').click() }
+});
+
 $('#send').onclick = sendMsg;
 $('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } };
 $('#inp').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' };
 $('#tSearch').onclick = e => { search = !search; e.currentTarget.classList.toggle('on', search) };
 $('#tThink').onclick = e => { think = !think; e.currentTarget.classList.toggle('on', think) };
-$('#file').onchange = e => { [...e.target.files].forEach(addImage); e.target.value = '' };
+$('#file').onchange = e => { [...e.target.files].forEach(addFile); e.target.value = '' };
 $('#menu').onclick = () => $('#side').classList.toggle('open');
 
 /* ---------- Panel de perfil, memoria, conectores y ajustes ---------- */
