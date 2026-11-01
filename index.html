@@ -250,6 +250,33 @@ button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipula
 @media(hover:none){.ci .ac{display:flex}}
 #instala{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:25;background:var(--navy);color:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 12px 40px #0006;display:flex;gap:12px;align-items:flex-start;font-size:14px}
 #instala b{display:block;margin-bottom:2px}#instala button{margin-left:auto;color:#fff;font-size:20px;line-height:1;padding:0 4px}
+
+/* ===== v5: móvil más cómodo (una sola fila para escribir, herramientas en un panel) ===== */
+.chips{display:contents}#plus,#nc{display:none}
+@media(max-width:800px){
+ #app{height:var(--vh,100dvh)}
+ #nc,#menu{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:var(--ink)}
+ .top{gap:6px;padding:8px 10px}.top h3{font-size:16px}#exp{display:none}
+ .comp{padding:6px 8px calc(8px + env(safe-area-inset-bottom))}
+ .box{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"th th th" "pl in sn" "ch ch ch";gap:6px 8px;align-items:end;padding:8px;border-radius:22px}
+ #thumbs{grid-area:th}#thumbs:empty{display:none}
+ #plus{display:grid;place-items:center;grid-area:pl;width:40px;height:40px;border-radius:50%;background:var(--bg);color:var(--ink);border:1px solid var(--line);transition:transform .2s}
+ .box.open #plus{transform:rotate(45deg)}
+ #plus.on{background:var(--a1);color:#fff;border-color:var(--a1)}
+ #inp{grid-area:in;min-height:40px;padding:9px 4px;max-height:140px}
+ .tools{display:contents}
+ #send{grid-area:sn;position:static;width:40px;height:40px;margin:0}
+ #stop{grid-area:sn;height:40px}
+ #stop:not(.hidden) + #send{display:none}
+ .chips{grid-area:ch;display:none;flex-wrap:wrap;gap:8px;padding-top:8px;border-top:1px solid var(--line)}
+ .box.open .chips{display:flex}
+ .chips .chip{flex:none;min-height:40px;padding:8px 14px;font-size:14px}
+ .ci{padding:13px 12px}
+ .act{flex-wrap:wrap}.act button{padding:7px 10px;font-size:13px}
+ .ov{align-items:end;padding:0}
+ .ov .modal{width:100%;max-height:92dvh;border-radius:22px 22px 0 0}
+ #dlg.ov{align-items:center;padding:16px}#dlg .modal{border-radius:22px}
+}
 </style>
 </head>
 <body>
@@ -308,16 +335,16 @@ button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipula
   </aside>
   <div id="scrim"></div>
   <main>
-    <div class="top"><button id="menu" aria-label="Menú"><i data-ic="menu" data-s="22"></i></button><h3 id="title">Nuevo chat</h3><button id="exp" title="Descargar este chat como archivo .md">Exportar</button></div>
+    <div class="top"><button id="menu" aria-label="Menú"><i data-ic="menu" data-s="22"></i></button><button id="nc" aria-label="Nuevo chat"><i data-ic="plus" data-s="22"></i></button><h3 id="title">Nuevo chat</h3><button id="exp" title="Descargar este chat como archivo .md">Exportar</button></div>
     <div id="msgs"><div class="wrap" id="wrap"></div></div>
     <div class="comp"><div class="box">
       <div id="thumbs"></div>
       <textarea id="inp" rows="1" placeholder="Escribe tu mensaje a Nexora"></textarea>
-      <div class="tools">
+      <div class="tools"><button type="button" id="plus" aria-label="Más opciones"><i data-ic="plus" data-s="22"></i></button><div class="chips">
         <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Archivo<input type="file" id="file" accept="image/*,.txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.log,.yml,.yaml,.sql" hidden multiple></label>
         <button class="chip on" id="tSearch"><i data-ic="globe" data-s="16"></i> Buscar en la web</button>
         <button class="chip" id="tThink"><i data-ic="brain" data-s="16"></i> Pensar a fondo</button>
-        <button class="chip" id="tG" type="button" title="Buscar y adjuntar desde tu Google Drive, Docs, Hojas o Fotos">Google</button><button class="chip md" data-m="img" id="tImg" type="button" title="Nexora dibuja lo que le pidas"><i data-ic="image" data-s="16"></i> Crear imagen</button><button class="chip md" data-m="drive" type="button" title="Busca y lee en todo tu Drive"><i data-ic="folder" data-s="16"></i> Drive</button><button class="chip md" data-m="docs" type="button" title="Busca y lee tus Documentos de Google"><i data-ic="doc" data-s="16"></i> Docs</button><button class="chip md" data-m="sheets" type="button" title="Busca y lee tus Hojas de cálculo"><i data-ic="sheet" data-s="16"></i> Sheets</button><button class="chip md" data-m="mail" type="button" title="Busca y lee tus correos"><i data-ic="mail" data-s="16"></i> Gmail</button><button class="chip md" data-m="yt" type="button" title="Busca vídeos y mira tus listas"><i data-ic="play" data-s="16"></i> YouTube</button><button class="chip md" data-m="map" type="button" title="Rutas y cómo llegar"><i data-ic="route" data-s="16"></i> Maps</button><button class="chip" id="mic" type="button">Voz</button><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
+        <button class="chip" id="tG" type="button" title="Buscar y adjuntar desde tu Google Drive, Docs, Hojas o Fotos">Google</button><button class="chip md" data-m="img" id="tImg" type="button" title="Nexora dibuja lo que le pidas"><i data-ic="image" data-s="16"></i> Crear imagen</button><button class="chip md" data-m="drive" type="button" title="Busca y lee en todo tu Drive"><i data-ic="folder" data-s="16"></i> Drive</button><button class="chip md" data-m="docs" type="button" title="Busca y lee tus Documentos de Google"><i data-ic="doc" data-s="16"></i> Docs</button><button class="chip md" data-m="sheets" type="button" title="Busca y lee tus Hojas de cálculo"><i data-ic="sheet" data-s="16"></i> Sheets</button><button class="chip md" data-m="mail" type="button" title="Busca y lee tus correos"><i data-ic="mail" data-s="16"></i> Gmail</button><button class="chip md" data-m="yt" type="button" title="Busca vídeos y mira tus listas"><i data-ic="play" data-s="16"></i> YouTube</button><button class="chip md" data-m="map" type="button" title="Rutas y cómo llegar"><i data-ic="route" data-s="16"></i> Maps</button><button class="chip" id="mic" type="button">Voz</button></div><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
       </div>
     </div></div>
   </main>
@@ -671,7 +698,7 @@ function msgHTML(m, i, arr) {
     const nota = !im && m.n ? `<div style="opacity:.8;font-size:13px;display:flex;gap:6px;align-items:center">${ic('image', 14)} ${m.n} imagen(es) adjunta(s) · no se guardan al recargar</div>` : '';
     return `<div class="m u">${ed}<div class="bub">${im ? `<div class="imgs">${im}</div>` : ''}${nota}${(m.docs || []).map(n => `<div style="font-size:13px;opacity:.85">${DL[n] ? `<a href="${esc(DL[n])}" target="_blank" rel="noopener noreferrer" style="color:inherit">${esc(n)} ↗</a>` : esc(n)}</div>`).join('')}${m.text && m.text !== '(imagen)' ? esc(m.text).replace(/\n/g, '<br>') : ''}</div></div>`;
   }
-  const nt = m.notice ? `<div class="nt">${esc(m.notice)}</div>` : '';
+  const nt = '';
   const th = m.reasoning ? `<details class="th"><summary>Razonamiento</summary>${esc(m.reasoning)}</details>` : '';
   // Solo se permiten enlaces http(s) en las fuentes (anti-XSS)
   const src = (m.sources || []).filter(s => /^https?:\/\//.test(s.url)).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a>`).join('');
@@ -776,7 +803,7 @@ async function askAI(c, onTick) {
     throw new Error((e || 'Gemini respondió ' + r.status + '.') + (det ? ' Detalle: ' + det.slice(0, 700) : ''));
   }
   // Lee el flujo SSE de Gemini: cada "data:" trae un trozo de texto, de razonamiento o metadatos de búsqueda
-  const out = { text: '', notice: r.headers.get('X-Nexora-Search') === 'off' ? 'La búsqueda web no estaba disponible ahora, así que respondo sin ella.' : '', reasoning: '', sources: [], entry: '' };
+  const out = { text: '', notice: '', reasoning: '', sources: [], entry: '' };
   const hs = r.headers.get('X-Nexora-Sources'); if (hs) { try { out.sources = JSON.parse(decodeURIComponent(escape(atob(hs)))) } catch {} }
   const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
   try {
@@ -803,6 +830,7 @@ async function askAI(c, onTick) {
 let live = null;   // respuesta en curso: { id del chat, o: texto parcial }
 const typingHTML = () => `<div id="typing">${live.o && (stripTitle(live.o.text) || live.o.reasoning) ? msgHTML({ role: 'assistant', text: stripTitle(live.o.text), notice: live.o.notice, reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
 async function sendMsg() {
+  $('.box').classList.remove('open');
   let t = $('#inp').value.trim(); if (!t && !pending.length && !docs.length) return;
   const rm = /^\s*recuerda que\s+(.{3,300})/i.exec(t); if (rm && !busy) { S.memory.push(rm[1].trim()); toast('Anotado: lo recordaré') }
   if (!busy && (await runMode(t)) === false) return;
@@ -841,7 +869,7 @@ function setMode(m) {
   mode = mode === m ? '' : m; imageOn = mode === 'img';
   document.querySelectorAll('.chip.md').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
   $('#tSearch').classList.toggle('dim', !!mode); $('#tThink').classList.toggle('dim', mode === 'img');
-  $('#inp').placeholder = MODEPH[mode] || 'Cuéntame qué necesitas';
+  $('#inp').placeholder = MODEPH[mode] || 'Cuéntame qué necesitas'; $('.box').classList.remove('open'); $('#plus').classList.toggle('on', !!mode);
 }
 document.querySelectorAll('.chip.md').forEach(b => b.onclick = () => setMode(b.dataset.m));
 const wantsImage = t => imageOn || /^\s*(dibuja|dibújame|genera|créame|creame|crea|hazme|haz|diseña)\s+(me\s+)?(una?|el|la)?\s*(imagen|foto|fotografía|dibujo|ilustración|logo|póster|poster|retrato|paisaje)/i.test(t);
@@ -992,7 +1020,13 @@ async function gToken(force) {
   if (force) {
     if (gServerOk()) {
       let largo = true; try { await gServer('g_status') } catch { largo = false }   // ¿el Worker tiene configurados los permisos largos?
-      if (largo) { const j = await gServer('g_connect', { code: await gCode(scope) }); S.settings.glong = true; save(); return set(j) }
+      if (largo) {
+        try { const j = await gServer('g_connect', { code: await gCode(scope) }); S.settings.glong = true; save(); return set(j) }
+        catch (e) {
+          if (/Cerraste|ventana|no dio permiso/.test(e.message)) throw e;
+          if (!await ask({ title: 'No se pudo activar el permiso largo', text: e.message + ' ¿Quieres conectar ahora con el permiso normal (dura 1 hora) y arreglarlo después?', ok: 'Conectar con 1 hora' })) throw e;
+        }
+      }
     }
     S.settings.glong = false; return gTok1('select_account', true);
   }
@@ -1291,8 +1325,15 @@ if (esIOS && !navigator.standalone && !LS.get('nx_inst', false)) setTimeout(() =
   document.body.insertAdjacentHTML('beforeend', '<div id="instala" role="dialog"><div><b>Instala Nexora en tu iPhone</b>Pulsa Compartir y luego «Añadir a pantalla de inicio». Se abrirá como una app, sin barras del navegador.</div><button aria-label="Cerrar">×</button></div>');
   $('#instala button').onclick = () => { LS.set('nx_inst', true); $('#instala').remove() };
 }, 4000);
+$('#plus').onclick = () => $('.box').classList.toggle('open');
+$('#nc').onclick = () => $('#newChat').click();
+$('#inp').addEventListener('focus', () => setTimeout(() => { $('#msgs').scrollTop = 1e9 }, 300));
+if (window.visualViewport) {   // el teclado del móvil no tapa el cuadro de escribir
+  const fit = () => { document.documentElement.style.setProperty('--vh', visualViewport.height + 'px'); if (document.activeElement === $('#inp')) { scrollTo(0, 0); $('#msgs').scrollTop = 1e9 } };
+  visualViewport.addEventListener('resize', fit); fit();
+}
 $('#send').onclick = sendMsg;
-$('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } };
+$('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer:coarse)').matches) { e.preventDefault(); sendMsg() } };
 $('#inp').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' };
 $('#tSearch').onclick = e => { search = !search; e.currentTarget.classList.toggle('on', search) };
 $('#tThink').onclick = e => { think = !think; e.currentTarget.classList.toggle('on', think) };
