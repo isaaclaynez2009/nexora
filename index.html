@@ -277,6 +277,7 @@ button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipula
  .ov .modal{width:100%;max-height:92dvh;border-radius:22px 22px 0 0}
  #dlg.ov{align-items:center;padding:16px}#dlg .modal{border-radius:22px}
 }
+.dg{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:#16A34A}.dg.w{background:#F59E0B}.dg.e{background:#DC2626}
 </style>
 </head>
 <body>
@@ -341,7 +342,7 @@ button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipula
       <div id="thumbs"></div>
       <textarea id="inp" rows="1" placeholder="Escribe tu mensaje a Nexora"></textarea>
       <div class="tools"><button type="button" id="plus" aria-label="Más opciones"><i data-ic="plus" data-s="22"></i></button><div class="chips">
-        <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Archivo<input type="file" id="file" accept="image/*,.txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.log,.yml,.yaml,.sql" hidden multiple></label>
+        <label class="chip" style="cursor:pointer"><i data-ic="image" data-s="16"></i> Archivo<input type="file" id="file" accept="image/*,.pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.rtf,.txt,.md,.csv,.tsv,.json,.js,.ts,.py,.html,.css,.xml,.log,.yml,.yaml,.sql,.doc,.xls,.ppt" hidden multiple></label>
         <button class="chip on" id="tSearch"><i data-ic="globe" data-s="16"></i> Buscar en la web</button>
         <button class="chip" id="tThink"><i data-ic="brain" data-s="16"></i> Pensar a fondo</button>
         <button class="chip" id="tG" type="button" title="Buscar y adjuntar desde tu Google Drive, Docs, Hojas o Fotos">Google</button><button class="chip md" data-m="img" id="tImg" type="button" title="Nexora dibuja lo que le pidas"><i data-ic="image" data-s="16"></i> Crear imagen</button><button class="chip md" data-m="drive" type="button" title="Busca y lee en todo tu Drive"><i data-ic="folder" data-s="16"></i> Drive</button><button class="chip md" data-m="docs" type="button" title="Busca y lee tus Documentos de Google"><i data-ic="doc" data-s="16"></i> Docs</button><button class="chip md" data-m="sheets" type="button" title="Busca y lee tus Hojas de cálculo"><i data-ic="sheet" data-s="16"></i> Sheets</button><button class="chip md" data-m="mail" type="button" title="Busca y lee tus correos"><i data-ic="mail" data-s="16"></i> Gmail</button><button class="chip md" data-m="yt" type="button" title="Busca vídeos y mira tus listas"><i data-ic="play" data-s="16"></i> YouTube</button><button class="chip md" data-m="map" type="button" title="Rutas y cómo llegar"><i data-ic="route" data-s="16"></i> Maps</button><button class="chip" id="mic" type="button">Voz</button></div><button class="chip hidden" id="stop" type="button">■ Detener</button><button id="send" aria-label="Enviar"><i data-ic="send" data-s="20"></i></button>
@@ -357,7 +358,7 @@ button,a,.chip,.ci{-webkit-tap-highlight-color:transparent;touch-action:manipula
 </div></div>
 <div class="ov hidden" id="ov"><div class="modal" role="dialog" aria-modal="true">
   <div class="mh">Perfil y ajustes<button id="cl" aria-label="Cerrar"><i data-ic="close" data-s="20"></i></button></div>
-  <div class="tabs" id="tabs"><button data-t="p" class="on">Perfil</button><button data-t="m">Memoria</button><button data-t="c">Conectores</button><button data-t="s">Ajustes</button></div>
+  <div class="tabs" id="tabs"><button data-t="p" class="on">Perfil</button><button data-t="m">Memoria</button><button data-t="c">Conectores</button><button data-t="s">Ajustes</button><button data-t="d">Diagnóstico</button></div>
   <div class="mb" id="mb"></div>
 </div></div>
 <div id="toast"></div>
@@ -379,6 +380,9 @@ const LS = {
   get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } },
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
 };
+const ERRLOG = [];
+const logErr = m => { ERRLOG.push(new Date().toLocaleTimeString() + ' · ' + String(m).slice(0, 140)); if (ERRLOG.length > 20) ERRLOG.shift() };
+addEventListener('error', e => logErr(e.message)); addEventListener('unhandledrejection', e => logErr(e.reason?.message || e.reason));
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); setTimeout(() => e.classList.remove('on'), 2200) };
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -463,7 +467,7 @@ const Cloud = {
     const { F, db } = this, u = user.uid, clean = o => JSON.parse(JSON.stringify(o));
     try {
       await F.setDoc(F.doc(db, 'users', u), clean({ profile: S.profile, memory: S.memory, conn: S.conn, settings: S.settings, cur: S.cur || null, updated: Date.now() }));
-      for (const c of S.chats) { const j = JSON.stringify(c); if (this.snap.get(c.id) !== j) { await F.setDoc(F.doc(db, 'users', u, 'chats', c.id), JSON.parse(j)); this.snap.set(c.id, j) } }
+      for (const c of S.chats) { shrinkChat(c); const j = JSON.stringify(c); if (this.snap.get(c.id) !== j) { await F.setDoc(F.doc(db, 'users', u, 'chats', c.id), JSON.parse(j)); this.snap.set(c.id, j) } }
       for (const id of [...this.snap.keys()]) if (!S.chats.some(c => c.id === id)) { await F.deleteDoc(F.doc(db, 'users', u, 'chats', id)); this.snap.delete(id) }
     } catch (e) { toast('No se pudo guardar en la nube: ' + e.message) }
   },
@@ -750,16 +754,77 @@ let pending = [];
 const IMGS = {}, GENIMG = {};   // GENIMG: imágenes creadas por Nexora en alta calidad (solo en memoria)
 function drawThumbs() {
   $('#thumbs').innerHTML = pending.map(x => `<div class="pv"><img src="${x.data}" alt="Imagen adjunta"><button data-r="${x.id}" aria-label="Quitar imagen">×</button></div>`).join('')
-    + docs.map(d => `<div class="dc">${esc(d.name)}<button data-r="${d.id}" aria-label="Quitar archivo">×</button></div>`).join('');
+    + [...pdfs, ...docs].map(d => `<div class="dc">${esc(d.name)}<button data-r="${d.id}" aria-label="Quitar archivo">×</button></div>`).join('');
 }
 let docs = []; const DOCS = {};
 const TXT = /\.(txt|md|csv|json|js|ts|py|html|css|xml|log|yml|yaml|sql)$/i;
+/* ---------- Lectura de archivos: PDF (los lee Gemini, también escaneados), Word, Excel, PowerPoint, OpenDocument, RTF, texto y código ---------- */
+let pdfs = []; const PDFS = {};
+const OFFICE = /\.(docx|xlsx|pptx|odt|ods|odp)$/i;
+const TXT2 = /\.(txt|md|csv|tsv|json|js|ts|py|html?|css|xml|log|ya?ml|sql|rtf|ini|cfg|java|c|cpp|cs|go|rs|php|rb|sh)$/i;
+const blobB64 = b => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = () => no(new Error('no se pudo leer')); r.readAsDataURL(b) });
+const xmlDoc = s => new DOMParser().parseFromString(s, 'application/xml');
+const numSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+async function unzip(buf) {   // lector mínimo de .zip (los .docx, .xlsx, .pptx y .odt son archivos zip)
+  const v = new DataView(buf), u8 = new Uint8Array(buf); let e = u8.length - 22;
+  while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('el archivo no es un documento válido');
+  const n = v.getUint16(e + 10, true), files = {}; let p = v.getUint32(e + 16, true);
+  for (let i = 0; i < n; i++) {
+    const method = v.getUint16(p + 10, true), cs = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), off = v.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nl)); p += 46 + nl + xl + cl;
+    files[name] = async () => {
+      const st = off + 30 + v.getUint16(off + 26, true) + v.getUint16(off + 28, true), data = u8.subarray(st, st + cs);
+      if (method === 0) return new TextDecoder().decode(data);
+      return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+    };
+  }
+  return files;
+}
+async function officeText(f) {
+  const z = await unzip(await f.arrayBuffer()), ext = f.name.split('.').pop().toLowerCase();
+  if (ext === 'docx') {
+    if (!z['word/document.xml']) throw new Error('no parece un Word válido');
+    return [...xmlDoc(await z['word/document.xml']()).getElementsByTagName('w:p')].map(p => [...p.getElementsByTagName('*')].map(x => x.nodeName === 'w:t' ? x.textContent : x.nodeName === 'w:tab' ? '\t' : x.nodeName === 'w:br' ? '\n' : '').join('')).join('\n');
+  }
+  if (ext === 'xlsx') {
+    const ss = z['xl/sharedStrings.xml'] ? [...xmlDoc(await z['xl/sharedStrings.xml']()).getElementsByTagName('si')].map(si => [...si.getElementsByTagName('t')].map(t => t.textContent).join('')) : [];
+    let out = '';
+    for (const k of Object.keys(z).filter(k => /^xl\/worksheets\/sheet\d+\.xml$/.test(k)).sort(numSort).slice(0, 8)) {
+      const rows = [...xmlDoc(await z[k]()).getElementsByTagName('row')].slice(0, 500).map(r => [...r.getElementsByTagName('c')].map(c => { const v = c.getElementsByTagName('v')[0]?.textContent ?? c.getElementsByTagName('t')[0]?.textContent ?? ''; return c.getAttribute('t') === 's' ? (ss[+v] ?? '') : v }).join(' | '));
+      out += `## ${k.split('/').pop()}\n` + rows.join('\n') + '\n\n';
+    }
+    return out;
+  }
+  if (ext === 'pptx') {
+    let out = '', i = 0;
+    for (const k of Object.keys(z).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort(numSort)) out += `## Diapositiva ${++i}\n` + [...xmlDoc(await z[k]()).getElementsByTagName('a:t')].map(t => t.textContent).join('\n') + '\n\n';
+    return out;
+  }
+  if (!z['content.xml']) throw new Error('no parece un documento válido');
+  return [...xmlDoc(await z['content.xml']()).getElementsByTagName('*')].filter(x => x.nodeName === 'text:p' || x.nodeName === 'text:h').map(x => x.textContent).join('\n');
+}
 async function addFile(f) {
-  if (/^image\//.test(f.type)) return addImage(f);
-  if (!TXT.test(f.name) && !f.type.startsWith('text/')) return toast('Solo puedo leer imágenes y archivos de texto o código.');
-  if (f.size > 60000) return toast('Ese archivo pesa demasiado (máximo 60 KB).');
-  if (docs.length >= 3) return toast('Máximo 3 archivos de texto por mensaje.');
-  try { docs.push({ id: uid(), name: f.name.slice(0, 40), text: await f.text() }); drawThumbs() } catch { toast('No pude leer ese archivo.') }
+  const name = f.name.slice(0, 40);
+  if (/^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|heic|bmp)$/i.test(f.name)) return addImage(f);
+  if (/\.(doc|xls|ppt)$/i.test(f.name)) return toast('Los formatos antiguos (.doc, .xls, .ppt) no se pueden leer. Guárdalo como .docx, .xlsx, .pptx o PDF.');
+  try {
+    if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') {
+      if (f.size > 8e6) return toast('Ese PDF pesa más de 8 MB. Prueba con uno más pequeño o divídelo.');
+      if (pdfs.length >= 2) return toast('Máximo 2 PDF por mensaje.');
+      pdfs.push({ id: uid(), name, data: await blobB64(f) }); return drawThumbs();
+    }
+    if (docs.length >= 3) return toast('Máximo 3 archivos de texto por mensaje.');
+    let text;
+    if (OFFICE.test(f.name)) { if (f.size > 15e6) return toast('Ese archivo pesa demasiado (máximo 15 MB).'); text = await officeText(f) }
+    else if (TXT2.test(f.name) || f.type.startsWith('text/')) {
+      if (f.size > 3e6) return toast('Ese archivo pesa demasiado (máximo 3 MB).');
+      text = await f.text(); if (/\.rtf$/i.test(f.name)) text = text.replace(/\\par[d]?/g, '\n').replace(/\\'([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16))).replace(/\{\\[^{}]*\}|\\[a-z]+-?\d* ?|[{}]/gi, '');
+    } else return toast('Puedo leer imágenes, PDF, Word, Excel, PowerPoint y archivos de texto o código.');
+    text = text.trim(); if (!text) return toast('No encontré texto en «' + name + '». Si es un escaneo, guárdalo como PDF.');
+    docs.push({ id: uid(), name, text: text.slice(0, 120000) }); drawThumbs();
+    if (text.length > 120000) toast('El archivo es muy largo: leeré los primeros 120.000 caracteres.');
+  } catch (e) { toast('No pude leer «' + name + '»: ' + e.message) }
 }
 async function addImage(file) {
   if (!file || !/^image\//.test(file.type)) return toast('Por ahora solo se pueden adjuntar imágenes.');
@@ -771,7 +836,7 @@ async function addImage(file) {
     pending.push({ id: uid(), data: cv.toDataURL('image/jpeg', .85) }); drawThumbs();
   } catch { toast('No pude leer esa imagen.') }
 }
-$('#thumbs').onclick = e => { const r = e.target.closest('[data-r]')?.dataset.r; if (r) { pending = pending.filter(x => x.id !== r); docs = docs.filter(x => x.id !== r); drawThumbs() } };
+$('#thumbs').onclick = e => { const r = e.target.closest('[data-r]')?.dataset.r; if (r) { pending = pending.filter(x => x.id !== r); docs = docs.filter(x => x.id !== r); pdfs = pdfs.filter(x => x.id !== r); drawThumbs() } };
 $('#inp').addEventListener('paste', e => {
   const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
   if (fs.length) { e.preventDefault(); fs.forEach(addImage) }   // si no hay imagen, el pegado de texto es normal
@@ -793,9 +858,10 @@ async function askAI(c, onTick) {
   const token = await Cloud.auth.currentUser.getIdToken();
   if (wantsImage(c.msgs.at(-1).text)) return genImage(c.msgs.at(-1).text, token);
   ctrl = new AbortController();
-  const r = await fetch(CONFIG.proxyUrl, { signal: ctrl.signal,
+  const pdfIds = new Set(c.msgs.filter(m => PDFS[m.id]?.length).slice(-2).map(m => m.id));
+  const r = await fetchRetry(CONFIG.proxyUrl, { signal: ctrl.signal,
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-    body: JSON.stringify({ system: systemPrompt() + (c.msgs.length === 1 ? TITLE_RULE : ''), messages: c.msgs.map(m => ({ role: m.role, content: m.text + (DOCS[m.id] || []).map(d => `\n\n[Archivo: ${d.name}]\n${d.text}`).join(''), images: IMGS[m.id] || [] })), think, search: search && !mode, temp: ({ baja: 0.3, alta: 1.2 })[S.settings.temp] })
+    body: JSON.stringify({ system: systemPrompt() + (c.msgs.length === 1 ? TITLE_RULE : ''), messages: c.msgs.map(m => ({ role: m.role, content: m.text + (DOCS[m.id] || []).map(d => `\n\n[Archivo: ${d.name}]\n${d.text}`).join(''), images: IMGS[m.id] || [], files: pdfIds.has(m.id) ? PDFS[m.id].map(f => f.data) : [] })), think, search: search && !mode && needsWeb(c.msgs.at(-1).text), temp: ({ baja: 0.3, alta: 1.2 })[S.settings.temp] })
   });
   if (!r.ok) {
     const raw = await r.text().catch(() => ''); let det = ''; try { det = JSON.parse(raw).error?.message || '' } catch { det = raw }
@@ -831,17 +897,18 @@ let live = null;   // respuesta en curso: { id del chat, o: texto parcial }
 const typingHTML = () => `<div id="typing">${live.o && (stripTitle(live.o.text) || live.o.reasoning) ? msgHTML({ role: 'assistant', text: stripTitle(live.o.text), notice: live.o.notice, reasoning: live.o.reasoning, sources: [] }) : '<div class="m a"><span class="av2">' + logo(26) + '</span><div class="bub dots"><span></span><span></span><span></span></div></div>'}</div>`;
 async function sendMsg() {
   $('.box').classList.remove('open');
-  let t = $('#inp').value.trim(); if (!t && !pending.length && !docs.length) return;
+  let t = $('#inp').value.trim(); if (!t && !pending.length && !docs.length && !pdfs.length) return;
   const rm = /^\s*recuerda que\s+(.{3,300})/i.exec(t); if (rm && !busy) { S.memory.push(rm[1].trim()); toast('Anotado: lo recordaré') }
   if (!busy && (await runMode(t)) === false) return;
   if (busy) return toast('Nexora aún está respondiendo. Espera un momento.');
   if (!t) t = '(imagen)';
   if (!chat()) newChat();
   const c = chat(); busy = true; $('#send').disabled = true; $('#stop').classList.remove('hidden');
-  const mid = uid(); c.msgs.push({ id: mid, role: 'user', text: t, n: pending.length, docs: docs.map(d => d.name) }); c.ts = Date.now();
+  const mid = uid(); c.msgs.push({ id: mid, role: 'user', text: t, n: pending.length, docs: [...pdfs, ...docs].map(d => d.name) }); c.ts = Date.now();
   if (pending.length) IMGS[mid] = pending.map(x => x.data);
   if (docs.length) DOCS[mid] = docs;
-  pending = []; docs = []; drawThumbs();
+  if (pdfs.length) PDFS[mid] = pdfs;
+  pending = []; docs = []; pdfs = []; drawThumbs();
   if (c.msgs.length === 1) c.title = t === '(imagen)' ? 'Imagen' : shortTitle(t);
   live = { id: c.id, o: null };
   $('#inp').value = ''; $('#inp').style.height = 'auto'; renderAll();
@@ -907,7 +974,7 @@ function regen() {
   const c = chat(); if (!c || busy || c.msgs.at(-1)?.role !== 'assistant') return;
   c.msgs.pop(); const u = c.msgs.pop(); if (!u) return;
   $('#inp').value = u.text === '(imagen)' ? '' : u.text;
-  pending = (IMGS[u.id] || []).map(d => ({ id: uid(), data: d })); docs = DOCS[u.id] ? [...DOCS[u.id]] : []; drawThumbs(); sendMsg();
+  pending = (IMGS[u.id] || []).map(d => ({ id: uid(), data: d })); docs = DOCS[u.id] ? [...DOCS[u.id]] : []; pdfs = PDFS[u.id] ? [...PDFS[u.id]] : []; drawThumbs(); sendMsg();
 }
 $('#wrap').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return; const m = chat()?.msgs[+b.dataset.i], a = b.dataset.act;
@@ -918,7 +985,7 @@ $('#wrap').addEventListener('click', e => {
   } else if (a === 'dl' && m) { const u = GENIMG[m.id] || m.img, l = document.createElement('a'); l.href = u; l.download = 'nexora-imagen.jpg'; l.click() }
   else if (a === 'edit' && m && !busy) {
     const c = chat(), k = +b.dataset.i; c.msgs.length = k;
-    $('#inp').value = m.text === '(imagen)' ? '' : m.text; pending = (IMGS[m.id] || []).map(d => ({ id: uid(), data: d })); docs = DOCS[m.id] ? [...DOCS[m.id]] : [];
+    $('#inp').value = m.text === '(imagen)' ? '' : m.text; pending = (IMGS[m.id] || []).map(d => ({ id: uid(), data: d })); docs = DOCS[m.id] ? [...DOCS[m.id]] : []; pdfs = PDFS[m.id] ? [...PDFS[m.id]] : [];
     drawThumbs(); save(); renderAll(); $('#inp').focus();
   } else if (a === 'gsave' && m) gOpen('save', m);
   else if (a === 'regen') regen();
@@ -1082,7 +1149,14 @@ async function gRead(f, all) {
   }
   return GCACHE.get(key).slice(0, all ? 2e5 : 12e4);
 }
+async function gPdf(f) {
+  if (pdfs.length >= 2) throw new Error('Máximo 2 PDF por mensaje.');
+  const b = await (await gApi(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`)).blob();
+  if (b.size > 8e6) throw new Error('Ese PDF pesa más de 8 MB.');
+  const name = f.name.slice(0, 40) + ' (Drive)'; pdfs.push({ id: uid(), name, data: await blobB64(b) }); DL[name] = safeLink(f.webViewLink); drawThumbs();
+}
 async function gAttach(f) {
+  if (f.mimeType === 'application/pdf') return gPdf(f);
   if (docs.length >= 3) return toast('Máximo 3 archivos por mensaje.');
   const name = f.name.slice(0, 40) + ' (Drive)'; docs.push({ id: uid(), name, text: await gRead(f) }); DL[name] = safeLink(f.webViewLink); drawThumbs();
 }
@@ -1174,7 +1248,7 @@ const NORM = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '
 const TSTOPN = new Set([...TSTOP, 'drive', 'docs', 'documento', 'documentos', 'hoja', 'hojas', 'sheets', 'google', 'archivo', 'archivos', 'tengo', 'dice', 'hay', 'cual', 'cuales', 'donde', 'cuando', 'quien', 'tiene', 'cosas', 'favor'].map(NORM));
 const kwords = t => [...new Set(NORM(t).replace(/[^a-z0-9ñ\s]/g, ' ').split(/\s+/).filter(x => x.length > 3 && !TSTOPN.has(x)))].sort((a, b) => b.length - a.length).slice(0, 5);
 async function gFind(words, kind) {
-  const mimes = kind === 'doc' ? [GM.doc] : kind === 'sheet' ? [GM.sheet] : [GM.doc, GM.sheet, GM.slide, 'text/plain', 'text/markdown', 'text/csv'];
+  const mimes = kind === 'doc' ? [GM.doc] : kind === 'sheet' ? [GM.sheet] : [GM.doc, GM.sheet, GM.slide, 'application/pdf', 'text/plain', 'text/markdown', 'text/csv'];
   const cond = words.map(w => `fullText contains '${w}' or name contains '${w}'`).join(' or ');
   const q = `(${cond}) and (${mimes.map(m => `mimeType='${m}'`).join(' or ')}) and trashed=false`;
   return (await (await gApi('https://www.googleapis.com/drive/v3/files?pageSize=15&fields=files(id,name,mimeType,webViewLink,modifiedTime)&q=' + encodeURIComponent(q))).json()).files || [];
@@ -1197,6 +1271,7 @@ async function gAuto(t, force, kindOv) {
     for (const f of (await gFind(words, kind)).slice(0, 8)) {
       if (budget < 1500) break;
       try {
+        if (f.mimeType === 'application/pdf') { await gPdf(f); n++; continue }
         const txt = topChunks(await gRead(f, true), words, Math.min(8000, budget)), name = f.name.slice(0, 40) + ' (Drive)';
         budget -= txt.length; docs.push({ id: uid(), name, text: txt }); DL[name] = safeLink(f.webViewLink); n++;
       } catch {}
@@ -1332,6 +1407,55 @@ if (window.visualViewport) {   // el teclado del móvil no tapa el cuadro de esc
   const fit = () => { document.documentElement.style.setProperty('--vh', visualViewport.height + 'px'); if (document.activeElement === $('#inp')) { scrollTo(0, 0); $('#msgs').scrollTop = 1e9 } };
   visualViewport.addEventListener('resize', fit); fit();
 }
+/* ---------- Robustez: reintentos, búsqueda solo cuando hace falta y registro de errores ---------- */
+const needsWeb = t => /\b(hoy|ayer|mañana|ahora|actual(es|mente)?|últim[oa]s?|reciente(s|mente)?|novedades?|noticias?|precios?|cuesta|cotizaci[oó]n|clima|tiempo en|resultados?|clasificaci[oó]n|quién (es|ha ganado|gan[oó])|cuándo|dónde|horarios?|ranking|lanzamiento|versi[oó]n|oferta|estreno|busca|investiga|fuentes?|enlaces?|202\d)\b/i.test(t);
+async function fetchRetry(url, opt) {
+  if (!navigator.onLine) throw new Error('Sin conexión a internet.');
+  try { return await fetch(url, opt) } catch (e) { if (e.name === 'AbortError') throw e; await new Promise(r => setTimeout(r, 1200)); return fetch(url, opt) }
+}
+function shrinkChat(c) {   // Firestore admite 1 MiB por chat: se quitan imágenes viejas y, si hace falta, los mensajes más antiguos
+  let n = JSON.stringify(c).length;
+  for (const m of c.msgs) { if (n < 850000) break; if (m.img) { n -= m.img.length; m.img = '' } }
+  while (n >= 850000 && c.msgs.length > 6) n -= JSON.stringify(c.msgs.shift()).length;
+}
+
+/* ---------- Diagnóstico: comprueba cada pieza y dice cómo arreglarla ---------- */
+async function diag(mb) {
+  mb.onclick = null; mb.innerHTML = '<p class="note">Comprobando todo…</p>';
+  const rows = [], add = (st, t, d, fix) => rows.push({ st, t, d, fix });   // st: 'o' bien, 'w' aviso, 'e' fallo
+  add(navigator.onLine ? 'o' : 'e', 'Conexión a internet', navigator.onLine ? 'Hay conexión.' : 'No hay conexión.', 'Revisa el wifi o los datos móviles.');
+  const ses = !!(Cloud.on && Cloud.auth?.currentUser);
+  add(ses ? 'o' : 'e', 'Sesión de Nexora', ses ? 'Has iniciado sesión como ' + (user?.email || '') : 'Sin sesión.', 'Cierra sesión y vuelve a entrar.');
+  try { await Cloud.F.getDoc(Cloud.F.doc(Cloud.db, 'users', user.uid)); add('o', 'Datos en la nube (Firestore)', 'Lectura correcta.') }
+  catch (e) { add('e', 'Datos en la nube (Firestore)', e.message, 'Comprueba que la base de datos existe y que las reglas de seguridad están publicadas.') }
+  let d = null;
+  try { d = await gServer('diag') } catch (e) {
+    add('e', 'Servidor de IA (Cloudflare)', e.message, e.status === 400 ? 'El Worker es la versión antigua: pega el worker.js nuevo y pulsa Deploy.' : e.status === 403 ? 'ALLOWED_ORIGIN debe ser exactamente ' + location.origin : e.status === 401 ? 'Cierra sesión y entra otra vez; revisa FIREBASE_PROJECT_ID.' : 'Comprueba que el Worker está desplegado y la dirección proxyUrl es correcta.');
+  }
+  if (d) {
+    const g = d.gemini || {};
+    add(g.ok ? 'o' : 'e', 'Gemini (la IA)', g.ok ? 'Responde con ' + g.model + '.' : (g.status ? g.status + ': ' : '') + (g.error || 'sin respuesta'),
+      g.status === 429 ? 'Se acabó el cupo gratuito de hoy, o ese modelo no tiene cupo. Espera a mañana o cambia MODEL_FAST en Cloudflare.' : g.status === 404 ? 'El modelo ya no existe: cambia MODEL_FAST por uno vigente.' : 'Revisa GEMINI_API_KEY (créala en aistudio.google.com) y que no tenga espacios.');
+    add(d.keys?.tavily || d.keys?.exa ? 'o' : 'w', 'Búsqueda web', d.keys?.tavily || d.keys?.exa ? 'Buscador configurado (' + [d.keys.tavily && 'Tavily', d.keys.exa && 'Exa'].filter(Boolean).join(' + ') + ').' : 'Sin buscador.', 'Añade el secreto TAVILY_API_KEY (y, si quieres más cupo, EXA_API_KEY).');
+    add(d.kv ? 'o' : 'w', 'Almacén KV (límites por usuario, caché y permisos largos)', d.kv ? 'Conectado.' : 'No conectado.', 'Crea un KV y añádelo al Worker como binding llamado TOKENS.');
+    add(d.ai ? 'o' : 'w', 'Crear imágenes (Workers AI)', d.ai ? 'Conectado.' : 'No conectado.', 'En el Worker: Settings → Bindings → Add → Workers AI, con el nombre AI.');
+    add(d.googleSecret && d.tokenKey && d.kv ? 'o' : 'w', 'Permisos largos de Google', d.googleSecret && d.tokenKey && d.kv ? 'Configurados.' : 'Faltan GOOGLE_CLIENT_SECRET, TOKEN_KEY o el KV.', 'Sin ellos los permisos de Google duran solo 1 hora.');
+    add(d.origin === location.origin ? 'o' : 'e', 'Dirección permitida (ALLOWED_ORIGIN)', 'Worker: ' + d.origin + ' · Web: ' + location.origin, 'Deben ser idénticas, sin barra final.');
+    const u = d.usage || {}, L = d.limits || {};
+    add('o', 'Tu uso de hoy', `Preguntas ${u.q || 0}/${L.q}, imágenes ${u.i || 0}/${L.i}, búsquedas ${u.s || 0}/${L.s}.`, '');
+  }
+  add(CONFIG.googleClientId ? 'o' : 'w', 'Cliente de Google', CONFIG.googleClientId ? 'Configurado. Origen que debe estar autorizado: ' + location.origin : 'Falta googleClientId en el código.', 'Pégalo en CONFIG.googleClientId.');
+  const con = Object.keys(S.conn).filter(k => S.conn[k]);
+  add(con.length ? (GX.tok || S.settings.glong ? 'o' : 'w') : 'w', 'Conectores de Google', con.length ? con.join(', ') + (S.settings.glong ? ' · permiso largo' : GX.tok ? ' · permiso de 1 hora activo' : ' · el permiso se pedirá al usarlos') : 'Ninguno conectado.', 'Conéctalos en Ajustes → Conectores.');
+  for (const [n, t] of [['microphone', 'Micrófono'], ['geolocation', 'Ubicación']]) {
+    try { const s = (await navigator.permissions.query({ name: n })).state; add(s === 'denied' ? 'e' : 'o', t, s === 'denied' ? 'Bloqueado en el navegador.' : s === 'granted' ? 'Permitido.' : 'Se pedirá al usarlo.', 'Pulsa el candado de la barra de direcciones y permítelo.') } catch { add('w', t, 'Este navegador no deja comprobarlo.', '') }
+  }
+  add(navigator.serviceWorker?.controller ? 'o' : 'w', 'App instalable (offline)', navigator.serviceWorker?.controller ? 'Activa.' : 'Aún no activa.', 'Recarga la web una vez; en iPhone, añádela a la pantalla de inicio.');
+  add(ERRLOG.length ? 'w' : 'o', 'Errores recientes', ERRLOG.length ? ERRLOG.slice(-5).join(' | ') : 'Ninguno.', '');
+  mb.innerHTML = rows.map(r => `<div class="mem"><span><i class="dg ${r.st}"></i><b>${esc(r.t)}</b><small style="display:block;color:var(--mut)">${esc(r.d)}${r.st !== 'o' && r.fix ? '<br>Qué hacer: ' + esc(r.fix) : ''}</small></span></div>`).join('') + '<button class="btn pri" id="dgRe">Repetir comprobación</button>';
+  $('#dgRe').onclick = () => diag(mb);
+}
+
 $('#send').onclick = sendMsg;
 $('#inp').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer:coarse)').matches) { e.preventDefault(); sendMsg() } };
 $('#inp').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' };
@@ -1352,6 +1476,7 @@ const CONNECTORS = [
 function tab(t) {
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   const mb = $('#mb');
+  if (t === 'd') return diag(mb);
   if (t === 'p') {
     mb.innerHTML = `<label class="field">Sobre ti (nombre, profesión, intereses)<textarea id="pA" rows="4">${esc(S.profile.about)}</textarea></label>
     <label class="field">Cómo quieres que responda (tono, idioma, nivel de detalle)<textarea id="pS" rows="4">${esc(S.profile.style)}</textarea></label>
